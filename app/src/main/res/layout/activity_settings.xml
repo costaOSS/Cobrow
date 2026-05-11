@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Ad Block -->
+        <LinearLayout style="@style/SettingRowStyle">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="Ad Blocker"
+                android:textColor="@color/text_primary" android:textSize="15sp" />
+            <Switch android:id="@+id/switchAdblock" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- JavaScript -->
+        <LinearLayout style="@style/SettingRowStyle">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="JavaScript"
+                android:textColor="@color/text_primary" android:textSize="15sp" />
+            <Switch android:id="@+id/switchJs" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- Dark Mode -->
+        <LinearLayout style="@style/SettingRowStyle">
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:text="Dark Mode"
+                android:textColor="@color/text_primary" android:textSize="15sp" />
+            <Switch android:id="@+id/switchDarkMode" android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- Home URL -->
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Home Page URL" android:textColor="@color/text_secondary"
+            android:textSize="12sp" android:layout_marginTop="16dp" android:layout_marginBottom="4dp" />
+        <EditText android:id="@+id/etHomeUrl"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:background="@drawable/url_bar_bg"
+            android:hint="https://www.google.com"
+            android:inputType="textUri"
+            android:padding="10dp"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp" />
+
+        <!-- User Agent -->
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Custom User Agent (leave blank for default)"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp" android:layout_marginTop="16dp" android:layout_marginBottom="4dp" />
+        <EditText android:id="@+id/etUserAgent"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:background="@drawable/url_bar_bg"
+            android:hint="Mozilla/5.0 ..."
+            android:padding="10dp"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp" />
+
+        <Button android:id="@+id/btnSaveSettings"
+            android:layout_width="match_parent" android:layout_height="48dp"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="@color/colorPrimary"
+            android:text="Save Settings"
+            android:textColor="#FFFFFF" />
+    </LinearLayout>
+</ScrollView>

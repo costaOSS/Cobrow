@@ -1,0 +1,3 @@
+-keep class com.cobrow.browser.data.** { *; }
+-keep class com.cobrow.browser.engine.** { *; }
+-keepattributes *Annotation*

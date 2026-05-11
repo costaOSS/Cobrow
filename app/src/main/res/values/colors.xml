@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#5C6BC0</color>
+    <color name="colorPrimaryDark">#3949AB</color>
+    <color name="colorAccent">#7986CB</color>
+
+    <!-- Light theme -->
+    <color name="bg">#F5F5F5</color>
+    <color name="toolbar_bg">#FFFFFF</color>
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    <color name="icon_color">#616161</color>
+    <color name="hint">#BDBDBD</color>
+    <color name="divider">#E0E0E0</color>
+    <color name="url_bar_bg">#F0F0F0</color>
+</resources>
