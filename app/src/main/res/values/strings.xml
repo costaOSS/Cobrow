@@ -2,4 +2,19 @@
 <resources>
     <string name="app_name">Cobrow</string>
     <string name="search_hint">Search or enter URL</string>
+    <string name="welcome_tagline">Fast, private browsing</string>
+    <string name="welcome_heading">Terms of Use &amp; Privacy Policy</string>
+    <string name="agree">Agree</string>
+    <string name="disagree">Disagree</string>
+    <string name="terms_and_privacy">
+<b>Terms of Use</b>\n\n
+By using Cobrow, you agree to use the app for lawful purposes only. You must not use Cobrow to access, transmit, or distribute any content that is illegal, harmful, or infringes on the rights of others. We reserve the right to update these terms at any time.\n\n
+<b>Privacy Policy</b>\n\n
+Cobrow is designed with your privacy in mind. We do not collect, store, or share any personal data or browsing history with third parties. All browsing data (history, bookmarks, cookies) is stored locally on your device only.\n\n
+• <b>Browsing data</b> — stored locally, never transmitted.\n
+• <b>Ad blocking</b> — filter lists are bundled with the app; no external requests are made to update them.\n
+• <b>Cookies</b> — managed locally; third-party cookies are blocked by default.\n
+• <b>No analytics</b> — we do not use any analytics or tracking SDKs.\n\n
+By tapping <b>Agree</b>, you confirm that you have read and accept these terms.
+    </string>
 </resources>
