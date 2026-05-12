@@ -66,6 +66,8 @@ public class MainActivity extends AppCompatActivity {
     private boolean isIncognito = false;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
+    // Track current page host safely (updated on main thread)
+    private volatile String currentPageHost = null;
     private static final String HOME_URL = "https://www.google.com";
     private static final String PREF_HOME = "home_url";
     private static final String PREF_UA = "user_agent";
@@ -400,8 +402,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
-            String pageHost = extractHost(webView.getUrl());
-            if (prefs.getBoolean(PREF_ADBLOCK, true) && AdBlocker.getInstance().shouldBlock(url, pageHost)) {
+            if (prefs.getBoolean(PREF_ADBLOCK, true) && AdBlocker.getInstance().shouldBlock(url, currentPageHost)) {
                 adsBlocked++;
                 runOnUiThread(() -> blockedCount.setText(String.valueOf(adsBlocked)));
                 return new WebResourceResponse("text/plain", "utf-8",
@@ -412,6 +413,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
+            currentPageHost = extractHost(url);
             progressBar.setVisibility(View.VISIBLE);
             urlBar.setText(url);
             btnRefresh.setImageResource(android.R.drawable.ic_menu_close_clear_cancel);
