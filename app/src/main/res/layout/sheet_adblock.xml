@@ -7,179 +7,109 @@
     android:paddingBottom="24dp">
 
     <!-- Header -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:gravity="center_vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="8dp">
-
-        <ImageView
-            android:layout_width="22dp"
-            android:layout_height="22dp"
-            android:src="@drawable/ic_shield"
-            android:tint="@color/colorPrimary" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_weight="1"
-            android:text="Ad Blocker"
-            android:textColor="@color/text_primary"
-            android:textSize="16sp"
-            android:fontFamily="sans-serif-medium" />
-    </LinearLayout>
-
-    <View android:layout_width="match_parent" android:layout_height="1dp"
-        android:background="@color/divider" />
-
-    <!-- Enable toggle row -->
-    <LinearLayout
-        android:id="@+id/rowAdblockToggle"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:gravity="center_vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:background="?attr/selectableItemBackground">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Enable Ad Blocker"
-            android:textColor="@color/text_primary"
-            android:textSize="15sp" />
-
-        <Switch
-            android:id="@+id/switchAdblock"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:clickable="false"
-            android:focusable="false" />
-    </LinearLayout>
-
-    <!-- Blocked count row -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:gravity="center_vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp">
-
-        <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:src="@drawable/ic_delete"
-            android:tint="@color/icon_color" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_weight="1"
-            android:text="Ads blocked this session"
-            android:textColor="@color/text_secondary"
-            android:textSize="14sp" />
-
-        <TextView
-            android:id="@+id/tvBlockedCount"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+    <LinearLayout android:layout_width="match_parent" android:layout_height="52dp"
+        android:gravity="center_vertical" android:paddingStart="16dp" android:paddingEnd="8dp">
+        <ImageView android:layout_width="22dp" android:layout_height="22dp"
+            android:src="@drawable/ic_shield" android:tint="@color/colorPrimary" />
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_marginStart="10dp" android:layout_weight="1"
+            android:text="Ad Blocker" android:textColor="@color/text_primary"
+            android:textSize="16sp" android:fontFamily="sans-serif-medium" />
+        <TextView android:id="@+id/tvBlockedCount"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginEnd="12dp"
             android:background="@drawable/badge_bg"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:paddingTop="3dp"
-            android:paddingBottom="3dp"
-            android:text="0"
-            android:textColor="@color/colorPrimary"
-            android:textSize="13sp"
-            android:fontFamily="sans-serif-medium" />
+            android:paddingStart="8dp" android:paddingEnd="8dp"
+            android:paddingTop="3dp" android:paddingBottom="3dp"
+            android:text="0" android:textColor="@color/colorPrimary"
+            android:textSize="13sp" android:fontFamily="sans-serif-medium" />
+    </LinearLayout>
+
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/divider" />
+
+    <!-- Enable toggle -->
+    <LinearLayout android:id="@+id/rowAdblockToggle"
+        android:layout_width="match_parent" android:layout_height="52dp"
+        android:gravity="center_vertical" android:paddingStart="16dp" android:paddingEnd="16dp"
+        android:background="?attr/selectableItemBackground">
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:text="Enable Ad Blocker"
+            android:textColor="@color/text_primary" android:textSize="15sp" />
+        <Switch android:id="@+id/switchAdblock" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:clickable="false" android:focusable="false" />
+    </LinearLayout>
+
+    <!-- Block 3rd-party trackers -->
+    <LinearLayout android:id="@+id/rowThirdParty"
+        android:layout_width="match_parent" android:layout_height="52dp"
+        android:gravity="center_vertical" android:paddingStart="16dp" android:paddingEnd="16dp"
+        android:background="?attr/selectableItemBackground">
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:text="Block 3rd-party trackers"
+            android:textColor="@color/text_primary" android:textSize="15sp" />
+        <Switch android:id="@+id/switchThirdParty" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:clickable="false" android:focusable="false" />
+    </LinearLayout>
+
+    <!-- Block cookie notices -->
+    <LinearLayout android:id="@+id/rowCookieNotices"
+        android:layout_width="match_parent" android:layout_height="52dp"
+        android:gravity="center_vertical" android:paddingStart="16dp" android:paddingEnd="16dp"
+        android:background="?attr/selectableItemBackground">
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:text="Block cookie notices"
+            android:textColor="@color/text_primary" android:textSize="15sp" />
+        <Switch android:id="@+id/switchCookieNotices" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:clickable="false" android:focusable="false" />
     </LinearLayout>
 
     <View android:layout_width="match_parent" android:layout_height="1dp"
         android:background="@color/divider" android:layout_marginStart="16dp" />
 
     <!-- Whitelist current site -->
-    <LinearLayout
-        android:id="@+id/rowWhitelist"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:gravity="center_vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
+    <LinearLayout android:id="@+id/rowWhitelist"
+        android:layout_width="match_parent" android:layout_height="56dp"
+        android:gravity="center_vertical" android:paddingStart="16dp" android:paddingEnd="16dp"
         android:background="?attr/selectableItemBackground">
-
-        <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:src="@drawable/ic_bookmark"
-            android:tint="@color/icon_color" />
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_weight="1"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Whitelist this site"
-                android:textColor="@color/text_primary"
-                android:textSize="15sp" />
-
-            <TextView
-                android:id="@+id/tvCurrentDomain"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp" />
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:orientation="vertical">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Whitelist this site" android:textColor="@color/text_primary" android:textSize="15sp" />
+            <TextView android:id="@+id/tvCurrentDomain"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:textColor="@color/text_secondary" android:textSize="12sp" />
         </LinearLayout>
-
-        <Switch
-            android:id="@+id/switchWhitelist"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:clickable="false"
-            android:focusable="false" />
+        <Switch android:id="@+id/switchWhitelist" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:clickable="false" android:focusable="false" />
     </LinearLayout>
 
     <View android:layout_width="match_parent" android:layout_height="1dp"
         android:background="@color/divider" android:layout_marginStart="16dp" />
 
-    <!-- Filter lists info -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:gravity="center_vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp">
+    <!-- Custom rules -->
+    <LinearLayout android:id="@+id/rowCustomRules"
+        android:layout_width="match_parent" android:layout_height="52dp"
+        android:gravity="center_vertical" android:paddingStart="16dp" android:paddingEnd="16dp"
+        android:background="?attr/selectableItemBackground">
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:text="Custom block rules"
+            android:textColor="@color/text_primary" android:textSize="15sp" />
+        <ImageView android:layout_width="20dp" android:layout_height="20dp"
+            android:src="@drawable/ic_arrow_forward" android:tint="@color/icon_color" />
+    </LinearLayout>
 
-        <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:src="@drawable/ic_settings"
-            android:tint="@color/icon_color" />
+    <View android:layout_width="match_parent" android:layout_height="1dp"
+        android:background="@color/divider" android:layout_marginStart="16dp" />
 
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_weight="1"
-            android:text="Filter lists"
-            android:textColor="@color/text_secondary"
-            android:textSize="14sp" />
-
-        <TextView
-            android:id="@+id/tvFilterInfo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="EasyList + uBlock"
-            android:textColor="@color/text_secondary"
-            android:textSize="12sp" />
+    <!-- Filter list info -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="48dp"
+        android:gravity="center_vertical" android:paddingStart="16dp" android:paddingEnd="16dp">
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:text="Filter lists"
+            android:textColor="@color/text_secondary" android:textSize="13sp" />
+        <TextView android:id="@+id/tvFilterInfo"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Loading…" android:textColor="@color/text_secondary" android:textSize="12sp" />
     </LinearLayout>
 
 </LinearLayout>

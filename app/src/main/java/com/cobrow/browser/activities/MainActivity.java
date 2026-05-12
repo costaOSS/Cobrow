@@ -400,7 +400,8 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
-            if (prefs.getBoolean(PREF_ADBLOCK, true) && AdBlocker.getInstance().shouldBlock(url)) {
+            String pageHost = extractHost(webView.getUrl());
+            if (prefs.getBoolean(PREF_ADBLOCK, true) && AdBlocker.getInstance().shouldBlock(url, pageHost)) {
                 adsBlocked++;
                 runOnUiThread(() -> blockedCount.setText(String.valueOf(adsBlocked)));
                 return new WebResourceResponse("text/plain", "utf-8",
@@ -424,8 +425,9 @@ public class MainActivity extends AppCompatActivity {
             btnRefresh.setImageResource(android.R.drawable.ic_menu_rotate);
             updateNavButtons();
             saveToHistory(view.getTitle(), url);
-            // Re-apply night mode after page load
             if (prefs.getBoolean(PREF_NIGHT, false)) view.loadUrl(NIGHT_MODE_JS);
+            if (prefs.getBoolean(PREF_ADBLOCK, true))
+                AdBlocker.getInstance().injectElementHiding(view, url);
         }
 
         @Override
@@ -450,5 +452,14 @@ public class MainActivity extends AppCompatActivity {
     private void updateNavButtons() {
         btnBack.setAlpha(webView.canGoBack() ? 1f : 0.4f);
         btnForward.setAlpha(webView.canGoForward() ? 1f : 0.4f);
+    }
+
+    private String extractHost(String url) {
+        if (url == null) return null;
+        try {
+            int s = url.indexOf("://"); if (s < 0) return null; s += 3;
+            int e = url.indexOf('/', s);
+            return e < 0 ? url.substring(s) : url.substring(s, e);
+        } catch (Exception e) { return null; }
     }
 }
