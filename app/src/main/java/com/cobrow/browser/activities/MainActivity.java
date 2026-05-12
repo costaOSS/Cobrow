@@ -28,6 +28,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -52,7 +53,6 @@ public class MainActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private SwipeRefreshLayout swipeRefresh;
     private ImageButton btnBack, btnForward, btnRefresh, btnHome, btnMenu;
-    private LinearLayout bottomBar;
     private TextView blockedCount;
 
     // Find in page
@@ -63,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
 
     private SharedPreferences prefs;
     private int adsBlocked = 0;
+    private boolean isIncognito = false;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     private static final String HOME_URL = "https://www.google.com";
@@ -70,6 +71,19 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREF_UA = "user_agent";
     private static final String PREF_JS = "javascript";
     private static final String PREF_ADBLOCK = "adblock";
+    private static final String PREF_NIGHT = "night_mode";
+    private static final String PREF_TEXT_SIZE = "text_size";
+
+    // Night mode CSS injection
+    private static final String NIGHT_MODE_JS =
+        "javascript:(function(){" +
+        "var s=document.createElement('style');" +
+        "s.id='cobrow-night';" +
+        "s.innerHTML='html{filter:invert(1) hue-rotate(180deg) !important;}" +
+        "img,video,canvas,iframe{filter:invert(1) hue-rotate(180deg) !important;}';" +
+        "document.head.appendChild(s);})()";
+    private static final String NIGHT_MODE_REMOVE_JS =
+        "javascript:(function(){var s=document.getElementById('cobrow-night');if(s)s.remove();})()";
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -89,7 +103,6 @@ public class MainActivity extends AppCompatActivity {
         btnHome = findViewById(R.id.btnHome);
         btnMenu = findViewById(R.id.btnMenu);
         blockedCount = findViewById(R.id.blockedCount);
-
         findBar = findViewById(R.id.findBar);
         etFind = findViewById(R.id.etFind);
         tvFindCount = findViewById(R.id.tvFindCount);
@@ -103,7 +116,6 @@ public class MainActivity extends AppCompatActivity {
         setupSwipeRefresh();
         setupFindInPage();
 
-        // Handle intent URL or load home
         String intentUrl = getIntent().getDataString();
         loadUrl(intentUrl != null ? intentUrl : prefs.getString(PREF_HOME, HOME_URL));
     }
@@ -120,6 +132,7 @@ public class MainActivity extends AppCompatActivity {
         s.setSupportMultipleWindows(false);
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
         s.setCacheMode(WebSettings.LOAD_DEFAULT);
+        s.setTextZoom(prefs.getInt(PREF_TEXT_SIZE, 100));
 
         String ua = prefs.getString(PREF_UA, null);
         if (ua != null && !ua.isEmpty()) s.setUserAgentString(ua);
@@ -152,9 +165,7 @@ public class MainActivity extends AppCompatActivity {
             }
             return false;
         });
-        urlBar.setOnFocusChangeListener((v, hasFocus) -> {
-            if (hasFocus) urlBar.selectAll();
-        });
+        urlBar.setOnFocusChangeListener((v, hasFocus) -> { if (hasFocus) urlBar.selectAll(); });
     }
 
     private void setupButtons() {
@@ -169,10 +180,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupSwipeRefresh() {
-        swipeRefresh.setOnRefreshListener(() -> {
-            webView.reload();
-            swipeRefresh.setRefreshing(false);
-        });
+        swipeRefresh.setOnRefreshListener(() -> { webView.reload(); swipeRefresh.setRefreshing(false); });
         swipeRefresh.setColorSchemeResources(R.color.colorPrimary);
     }
 
@@ -180,67 +188,42 @@ public class MainActivity extends AppCompatActivity {
         etFind.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int st, int c, int a) {}
             @Override public void onTextChanged(CharSequence s, int st, int b, int c) {
-                String query = s.toString().trim();
-                if (!query.isEmpty()) {
-                    webView.findAllAsync(query);
-                } else {
-                    webView.clearMatches();
-                    tvFindCount.setText("");
-                }
+                String q = s.toString().trim();
+                if (!q.isEmpty()) webView.findAllAsync(q);
+                else { webView.clearMatches(); tvFindCount.setText(""); }
             }
             @Override public void afterTextChanged(Editable s) {}
         });
         etFind.setOnEditorActionListener((v, actionId, event) -> {
-            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                webView.findNext(true);
-                return true;
-            }
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) { webView.findNext(true); return true; }
             return false;
         });
         webView.setFindListener((activeMatchOrdinal, numberOfMatches, isDoneCounting) -> {
-            if (isDoneCounting) {
-                tvFindCount.setText(numberOfMatches > 0
-                        ? (activeMatchOrdinal + 1) + "/" + numberOfMatches
-                        : "No results");
-            }
+            if (isDoneCounting)
+                tvFindCount.setText(numberOfMatches > 0 ? (activeMatchOrdinal + 1) + "/" + numberOfMatches : "No results");
         });
         btnFindPrev.setOnClickListener(v -> webView.findNext(false));
         btnFindNext.setOnClickListener(v -> webView.findNext(true));
         btnFindClose.setOnClickListener(v -> hideFindInPage());
     }
 
+    // ── Public feature methods called from BottomMenuSheet ─────────────────────
+
     public void showFindInPage() {
         findBar.setVisibility(View.VISIBLE);
         etFind.requestFocus();
-        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.showSoftInput(etFind, InputMethodManager.SHOW_IMPLICIT);
-    }
-
-    private void hideFindInPage() {
-        findBar.setVisibility(View.GONE);
-        etFind.setText("");
-        tvFindCount.setText("");
-        webView.clearMatches();
-        hideKeyboard();
+        ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
+                .showSoftInput(etFind, InputMethodManager.SHOW_IMPLICIT);
     }
 
     public void savePageAsMhtml() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-            String fileName = URLUtil.guessFileName(webView.getUrl(), null, "application/x-mimearchive");
-            if (!fileName.endsWith(".mhtml")) fileName = fileName.replace(".bin", "") + ".mhtml";
-            java.io.File file = new java.io.File(
-                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName);
-            final String finalFileName = fileName;
-            webView.saveWebArchive(file.getAbsolutePath(), false, path -> {
-                if (path != null) {
-                    Toast.makeText(this, "Saved: " + finalFileName, Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(this, "Save failed", Toast.LENGTH_SHORT).show();
-                }
-            });
-        } else {
-            Toast.makeText(this, "Save page requires Android 4.4+", Toast.LENGTH_SHORT).show();
-        }
+        String fileName = URLUtil.guessFileName(webView.getUrl(), null, null);
+        if (!fileName.endsWith(".mhtml")) fileName = fileName.replaceAll("\\.[^.]+$", "") + ".mhtml";
+        java.io.File file = new java.io.File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName);
+        final String fn = fileName;
+        webView.saveWebArchive(file.getAbsolutePath(), false,
+                path -> Toast.makeText(this, path != null ? "Saved: " + fn : "Save failed", Toast.LENGTH_SHORT).show());
     }
 
     public void clearBrowsingData() {
@@ -253,24 +236,128 @@ public class MainActivity extends AppCompatActivity {
                     CookieManager.getInstance().removeAllCookies(null);
                     CookieManager.getInstance().flush();
                     WebStorage.getInstance().deleteAllData();
-                    executor.execute(() ->
-                            CobrowDatabase.get(this).historyDao().clearAll());
+                    executor.execute(() -> CobrowDatabase.get(this).historyDao().clearAll());
                     adsBlocked = 0;
                     blockedCount.setText("0");
                     Toast.makeText(this, "Browsing data cleared", Toast.LENGTH_SHORT).show();
                 })
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton("Cancel", null).show();
+    }
+
+    public void toggleIncognito() {
+        isIncognito = !isIncognito;
+        CookieManager.getInstance().setAcceptCookie(!isIncognito);
+        webView.getSettings().setCacheMode(isIncognito ? WebSettings.LOAD_NO_CACHE : WebSettings.LOAD_DEFAULT);
+        if (isIncognito) {
+            webView.clearCache(true);
+            CookieManager.getInstance().removeAllCookies(null);
+        }
+        Toast.makeText(this, isIncognito ? "Incognito ON" : "Incognito OFF", Toast.LENGTH_SHORT).show();
+        webView.reload();
+    }
+
+    public boolean isIncognito() { return isIncognito; }
+
+    public void toggleNightMode() {
+        boolean night = !prefs.getBoolean(PREF_NIGHT, false);
+        prefs.edit().putBoolean(PREF_NIGHT, night).apply();
+        webView.loadUrl(night ? NIGHT_MODE_JS : NIGHT_MODE_REMOVE_JS);
+        Toast.makeText(this, night ? "Night Mode ON" : "Night Mode OFF", Toast.LENGTH_SHORT).show();
+    }
+
+    public boolean isNightMode() { return prefs.getBoolean(PREF_NIGHT, false); }
+
+    public void showReaderMode() {
+        // Inject Readability-style JS to strip page to main content
+        String js = "javascript:(function(){" +
+            "var article=document.querySelector('article')||document.querySelector('main')||document.body;" +
+            "var title=document.title;" +
+            "var content=article.innerText;" +
+            "document.open();" +
+            "document.write('<html><head><meta name=viewport content=width=device-width><style>" +
+            "body{max-width:680px;margin:24px auto;padding:0 16px;font-family:Georgia,serif;font-size:18px;line-height:1.7;color:#222;background:#fafafa;}" +
+            "h1{font-size:24px;margin-bottom:8px;}" +
+            "</style></head><body>" +
+            "<h1>'+title+'</h1><p>'+content.replace(/\\n/g,'</p><p>')+'</p>" +
+            "</body></html>');" +
+            "document.close();})()";
+        webView.loadUrl(js);
+    }
+
+    public void viewSource() {
+        String url = webView.getUrl();
+        if (url == null) return;
+        webView.loadUrl("view-source:" + url);
+    }
+
+    public void showPageInfo() {
+        String url = webView.getUrl();
+        String title = webView.getTitle();
+        boolean isSecure = url != null && url.startsWith("https://");
+        new AlertDialog.Builder(this)
+                .setTitle("Page Info")
+                .setMessage(
+                    "Title: " + (title != null ? title : "—") + "\n\n" +
+                    "URL: " + (url != null ? url : "—") + "\n\n" +
+                    "Connection: " + (isSecure ? "🔒 Secure (HTTPS)" : "⚠ Not Secure (HTTP)"))
+                .setPositiveButton("OK", null)
                 .show();
     }
 
+    public void showTextSize() {
+        int current = prefs.getInt(PREF_TEXT_SIZE, 100);
+        View view = getLayoutInflater().inflate(android.R.layout.activity_list_item, null);
+        // Use a simple SeekBar dialog
+        final int[] size = {current};
+        SeekBar seekBar = new SeekBar(this);
+        seekBar.setMax(150); // 50% to 200% → offset by 50
+        seekBar.setProgress(current - 50);
+        seekBar.setPadding(48, 32, 48, 16);
+
+        TextView label = new TextView(this);
+        label.setText(current + "%");
+        label.setGravity(android.view.Gravity.CENTER);
+        label.setPadding(0, 8, 0, 0);
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
+                size[0] = progress + 50;
+                label.setText(size[0] + "%");
+                webView.getSettings().setTextZoom(size[0]);
+            }
+            @Override public void onStartTrackingTouch(SeekBar sb) {}
+            @Override public void onStopTrackingTouch(SeekBar sb) {}
+        });
+
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.addView(seekBar);
+        layout.addView(label);
+
+        new AlertDialog.Builder(this)
+                .setTitle("Text Size")
+                .setView(layout)
+                .setPositiveButton("Apply", (d, w) -> prefs.edit().putInt(PREF_TEXT_SIZE, size[0]).apply())
+                .setNegativeButton("Cancel", (d, w) -> webView.getSettings().setTextZoom(current))
+                .show();
+    }
+
+    // ── Internal helpers ───────────────────────────────────────────────────────
+
     public void loadUrl(String input) {
-        String url = UrlUtils.toUrl(input);
-        webView.loadUrl(url);
+        webView.loadUrl(UrlUtils.toUrl(input));
     }
 
     private void showMenu() {
-        BottomMenuSheet sheet = new BottomMenuSheet(this, webView, prefs, adsBlocked);
-        sheet.show();
+        new BottomMenuSheet(this, webView, prefs, adsBlocked).show();
+    }
+
+    private void hideFindInPage() {
+        findBar.setVisibility(View.GONE);
+        etFind.setText("");
+        tvFindCount.setText("");
+        webView.clearMatches();
+        hideKeyboard();
     }
 
     private void hideKeyboard() {
@@ -289,19 +376,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void saveToHistory(String title, String url) {
-        executor.execute(() ->
-                CobrowDatabase.get(this).historyDao().insert(new HistoryItem(title, url)));
+        if (!isIncognito)
+            executor.execute(() -> CobrowDatabase.get(this).historyDao().insert(new HistoryItem(title, url)));
     }
 
     @Override
     public void onBackPressed() {
-        if (findBar.getVisibility() == View.VISIBLE) {
-            hideFindInPage();
-        } else if (webView.canGoBack()) {
-            webView.goBack();
-        } else {
-            super.onBackPressed();
-        }
+        if (findBar.getVisibility() == View.VISIBLE) hideFindInPage();
+        else if (webView.canGoBack()) webView.goBack();
+        else super.onBackPressed();
     }
 
     @Override
@@ -314,8 +397,6 @@ public class MainActivity extends AppCompatActivity {
     // ── WebViewClient ──────────────────────────────────────────────────────────
 
     private class CobrowWebViewClient extends WebViewClient {
-        private static final String EMPTY_RESPONSE = "";
-
         @Override
         public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
@@ -323,7 +404,7 @@ public class MainActivity extends AppCompatActivity {
                 adsBlocked++;
                 runOnUiThread(() -> blockedCount.setText(String.valueOf(adsBlocked)));
                 return new WebResourceResponse("text/plain", "utf-8",
-                        new ByteArrayInputStream(EMPTY_RESPONSE.getBytes()));
+                        new ByteArrayInputStream("".getBytes()));
             }
             return super.shouldInterceptRequest(view, request);
         }
@@ -343,15 +424,15 @@ public class MainActivity extends AppCompatActivity {
             btnRefresh.setImageResource(android.R.drawable.ic_menu_rotate);
             updateNavButtons();
             saveToHistory(view.getTitle(), url);
+            // Re-apply night mode after page load
+            if (prefs.getBoolean(PREF_NIGHT, false)) view.loadUrl(NIGHT_MODE_JS);
         }
 
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
-            if (url.startsWith("http") || url.startsWith("https")) return false;
-            try {
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-            } catch (Exception ignored) {}
+            if (url.startsWith("http") || url.startsWith("https") || url.startsWith("view-source:")) return false;
+            try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); } catch (Exception ignored) {}
             return true;
         }
     }
@@ -364,9 +445,6 @@ public class MainActivity extends AppCompatActivity {
             progressBar.setProgress(newProgress);
             if (newProgress == 100) progressBar.setVisibility(View.GONE);
         }
-
-        @Override
-        public void onReceivedTitle(WebView view, String title) {}
     }
 
     private void updateNavButtons() {

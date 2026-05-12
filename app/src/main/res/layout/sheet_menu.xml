@@ -22,32 +22,28 @@
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <LinearLayout android:id="@+id/menuAddBookmark"
-            style="@style/MenuItemStyle">
+        <LinearLayout android:id="@+id/menuAddBookmark" style="@style/MenuItemStyle">
             <ImageView android:layout_width="28dp" android:layout_height="28dp"
                 android:src="@drawable/ic_bookmark" android:tint="@color/colorPrimary" />
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:text="Bookmark" style="@style/MenuLabelStyle" />
         </LinearLayout>
 
-        <LinearLayout android:id="@+id/menuBookmarks"
-            style="@style/MenuItemStyle">
+        <LinearLayout android:id="@+id/menuBookmarks" style="@style/MenuItemStyle">
             <ImageView android:layout_width="28dp" android:layout_height="28dp"
                 android:src="@drawable/ic_bookmarks" android:tint="@color/icon_color" />
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:text="Bookmarks" style="@style/MenuLabelStyle" />
         </LinearLayout>
 
-        <LinearLayout android:id="@+id/menuHistory"
-            style="@style/MenuItemStyle">
+        <LinearLayout android:id="@+id/menuHistory" style="@style/MenuItemStyle">
             <ImageView android:layout_width="28dp" android:layout_height="28dp"
                 android:src="@drawable/ic_history" android:tint="@color/icon_color" />
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:text="History" style="@style/MenuLabelStyle" />
         </LinearLayout>
 
-        <LinearLayout android:id="@+id/menuShare"
-            style="@style/MenuItemStyle">
+        <LinearLayout android:id="@+id/menuShare" style="@style/MenuItemStyle">
             <ImageView android:layout_width="28dp" android:layout_height="28dp"
                 android:src="@drawable/ic_share" android:tint="@color/icon_color" />
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
@@ -59,63 +55,101 @@
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <LinearLayout android:id="@+id/menuDesktop"
-            style="@style/MenuItemStyle">
+        <LinearLayout android:id="@+id/menuDesktop" style="@style/MenuItemStyle">
             <ImageView android:layout_width="28dp" android:layout_height="28dp"
                 android:src="@drawable/ic_desktop" android:tint="@color/icon_color" />
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:text="Desktop" style="@style/MenuLabelStyle" />
         </LinearLayout>
 
-        <LinearLayout android:id="@+id/menuAdblock"
-            style="@style/MenuItemStyle">
+        <LinearLayout android:id="@+id/menuAdblock" style="@style/MenuItemStyle">
             <ImageView android:layout_width="28dp" android:layout_height="28dp"
                 android:src="@drawable/ic_shield" android:tint="@color/colorPrimary" />
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:text="Ad Block" style="@style/MenuLabelStyle" />
         </LinearLayout>
 
-        <LinearLayout android:id="@+id/menuSettings"
-            style="@style/MenuItemStyle">
+        <LinearLayout android:id="@+id/menuIncognito" style="@style/MenuItemStyle">
             <ImageView android:layout_width="28dp" android:layout_height="28dp"
-                android:src="@drawable/ic_settings" android:tint="@color/icon_color" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                android:text="Settings" style="@style/MenuLabelStyle" />
+                android:src="@drawable/ic_incognito" android:tint="@color/icon_color" />
+            <TextView android:id="@+id/labelIncognito"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Incognito" style="@style/MenuLabelStyle" />
         </LinearLayout>
 
-        <LinearLayout android:layout_width="0dp" android:layout_height="80dp"
-            android:layout_weight="1" />
+        <LinearLayout android:id="@+id/menuNightMode" style="@style/MenuItemStyle">
+            <ImageView android:layout_width="28dp" android:layout_height="28dp"
+                android:src="@drawable/ic_night" android:tint="@color/icon_color" />
+            <TextView android:id="@+id/labelNightMode"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Night Mode" style="@style/MenuLabelStyle" />
+        </LinearLayout>
     </LinearLayout>
 
     <!-- Row 3 -->
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <LinearLayout android:id="@+id/menuFindInPage"
-            style="@style/MenuItemStyle">
+        <LinearLayout android:id="@+id/menuReaderMode" style="@style/MenuItemStyle">
+            <ImageView android:layout_width="28dp" android:layout_height="28dp"
+                android:src="@drawable/ic_reader" android:tint="@color/icon_color" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Reader" style="@style/MenuLabelStyle" />
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/menuViewSource" style="@style/MenuItemStyle">
+            <ImageView android:layout_width="28dp" android:layout_height="28dp"
+                android:src="@drawable/ic_code" android:tint="@color/icon_color" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Source" style="@style/MenuLabelStyle" />
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/menuPageInfo" style="@style/MenuItemStyle">
+            <ImageView android:layout_width="28dp" android:layout_height="28dp"
+                android:src="@drawable/ic_info" android:tint="@color/icon_color" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Page Info" style="@style/MenuLabelStyle" />
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/menuTextSize" style="@style/MenuItemStyle">
+            <ImageView android:layout_width="28dp" android:layout_height="28dp"
+                android:src="@drawable/ic_find" android:tint="@color/icon_color" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Text Size" style="@style/MenuLabelStyle" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Row 4 -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <LinearLayout android:id="@+id/menuFindInPage" style="@style/MenuItemStyle">
             <ImageView android:layout_width="28dp" android:layout_height="28dp"
                 android:src="@drawable/ic_find" android:tint="@color/icon_color" />
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:text="Find" style="@style/MenuLabelStyle" />
         </LinearLayout>
 
-        <LinearLayout android:id="@+id/menuSavePage"
-            style="@style/MenuItemStyle">
+        <LinearLayout android:id="@+id/menuSavePage" style="@style/MenuItemStyle">
             <ImageView android:layout_width="28dp" android:layout_height="28dp"
                 android:src="@drawable/ic_download" android:tint="@color/icon_color" />
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:text="Save Page" style="@style/MenuLabelStyle" />
         </LinearLayout>
 
-        <LinearLayout android:id="@+id/menuClearData"
-            style="@style/MenuItemStyle">
+        <LinearLayout android:id="@+id/menuClearData" style="@style/MenuItemStyle">
             <ImageView android:layout_width="28dp" android:layout_height="28dp"
                 android:src="@drawable/ic_delete" android:tint="@color/icon_color" />
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
                 android:text="Clear Data" style="@style/MenuLabelStyle" />
         </LinearLayout>
 
-        <LinearLayout android:layout_width="0dp" android:layout_height="80dp"
-            android:layout_weight="1" />
+        <LinearLayout android:id="@+id/menuSettings" style="@style/MenuItemStyle">
+            <ImageView android:layout_width="28dp" android:layout_height="28dp"
+                android:src="@drawable/ic_settings" android:tint="@color/icon_color" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Settings" style="@style/MenuLabelStyle" />
+        </LinearLayout>
     </LinearLayout>
+
 </LinearLayout>
