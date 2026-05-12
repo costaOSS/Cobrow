@@ -18,6 +18,7 @@ public class AdBlocker {
 
     private final Set<String> exactDomainRules = new HashSet<>();
     private final List<Pattern> regexRules = new ArrayList<>();
+    private final Set<String> whitelist = new HashSet<>();
     private boolean enabled = true;
 
     private AdBlocker() {}
@@ -82,6 +83,14 @@ public class AdBlocker {
         // Fast domain check
         String host = extractHost(url);
         if (host != null) {
+            // Whitelist check
+            if (whitelist.contains(host)) return false;
+            int wdot = host.indexOf('.');
+            while (wdot != -1) {
+                if (whitelist.contains(host.substring(wdot + 1))) return false;
+                wdot = host.indexOf('.', wdot + 1);
+            }
+
             if (exactDomainRules.contains(host)) return true;
             // Check subdomains
             int dot = host.indexOf('.');
@@ -113,4 +122,8 @@ public class AdBlocker {
 
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
     public boolean isEnabled() { return enabled; }
+
+    public void addToWhitelist(String domain) { whitelist.add(domain); }
+    public void removeFromWhitelist(String domain) { whitelist.remove(domain); }
+    public boolean isWhitelisted(String domain) { return whitelist.contains(domain); }
 }

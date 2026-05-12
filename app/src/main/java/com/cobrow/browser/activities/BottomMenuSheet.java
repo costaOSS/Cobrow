@@ -7,7 +7,6 @@ import android.webkit.WebView;
 import android.widget.Toast;
 
 import com.cobrow.browser.R;
-import com.cobrow.browser.engine.AdBlocker;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 public class BottomMenuSheet {
@@ -27,16 +26,17 @@ public class BottomMenuSheet {
         BottomSheetDialog dialog = new BottomSheetDialog(ctx, R.style.BottomSheetStyle);
         dialog.setContentView(R.layout.sheet_menu);
 
+        // Row 1
+        dialog.findViewById(R.id.menuAddBookmark).setOnClickListener(v -> {
+            if (ctx instanceof MainActivity) ((MainActivity) ctx).addCurrentPageBookmark();
+            dialog.dismiss();
+        });
         dialog.findViewById(R.id.menuBookmarks).setOnClickListener(v -> {
             ctx.startActivity(new Intent(ctx, BookmarksActivity.class));
             dialog.dismiss();
         });
         dialog.findViewById(R.id.menuHistory).setOnClickListener(v -> {
             ctx.startActivity(new Intent(ctx, HistoryActivity.class));
-            dialog.dismiss();
-        });
-        dialog.findViewById(R.id.menuSettings).setOnClickListener(v -> {
-            ctx.startActivity(new Intent(ctx, SettingsActivity.class));
             dialog.dismiss();
         });
         dialog.findViewById(R.id.menuShare).setOnClickListener(v -> {
@@ -46,6 +46,8 @@ public class BottomMenuSheet {
             ctx.startActivity(Intent.createChooser(share, "Share via"));
             dialog.dismiss();
         });
+
+        // Row 2
         dialog.findViewById(R.id.menuDesktop).setOnClickListener(v -> {
             String ua = webView.getSettings().getUserAgentString();
             if (ua.contains("Mobile")) {
@@ -59,20 +61,30 @@ public class BottomMenuSheet {
             webView.reload();
             dialog.dismiss();
         });
+        // AdBlock opens submenu
         dialog.findViewById(R.id.menuAdblock).setOnClickListener(v -> {
-            boolean current = AdBlocker.getInstance().isEnabled();
-            AdBlocker.getInstance().setEnabled(!current);
-            prefs.edit().putBoolean("adblock", !current).apply();
-            Toast.makeText(ctx, "Ad Block: " + (!current ? "ON" : "OFF"), Toast.LENGTH_SHORT).show();
-            webView.reload();
+            dialog.dismiss();
+            new AdBlockMenuSheet(ctx, webView, prefs, adsBlocked).show();
+        });
+        dialog.findViewById(R.id.menuSettings).setOnClickListener(v -> {
+            ctx.startActivity(new Intent(ctx, SettingsActivity.class));
             dialog.dismiss();
         });
-        dialog.findViewById(R.id.menuAddBookmark).setOnClickListener(v -> {
-            if (ctx instanceof MainActivity) {
-                ((MainActivity) ctx).addCurrentPageBookmark();
-            }
+
+        // Row 3
+        dialog.findViewById(R.id.menuFindInPage).setOnClickListener(v -> {
             dialog.dismiss();
+            if (ctx instanceof MainActivity) ((MainActivity) ctx).showFindInPage();
         });
+        dialog.findViewById(R.id.menuSavePage).setOnClickListener(v -> {
+            dialog.dismiss();
+            if (ctx instanceof MainActivity) ((MainActivity) ctx).savePageAsMhtml();
+        });
+        dialog.findViewById(R.id.menuClearData).setOnClickListener(v -> {
+            dialog.dismiss();
+            if (ctx instanceof MainActivity) ((MainActivity) ctx).clearBrowsingData();
+        });
+
         dialog.show();
     }
 }
