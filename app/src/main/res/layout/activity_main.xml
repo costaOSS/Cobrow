@@ -22,7 +22,7 @@
             android:layout_weight="1"
             android:background="@drawable/url_bar_bg"
             android:hint="Search or enter URL"
-            android:hintTextColor="@color/hint"
+            android:textColorHint="@color/hint"
             android:imeOptions="actionGo"
             android:inputType="textUri"
             android:maxLines="1"
