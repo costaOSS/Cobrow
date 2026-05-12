@@ -88,6 +88,23 @@ public class AdBlockMenuSheet {
                 showCustomRulesDialog(ab);
             });
 
+        if (dialog.findViewById(R.id.rowUpdateFilters) != null) {
+            TextView tvStatus = dialog.findViewById(R.id.tvUpdateStatus);
+            dialog.findViewById(R.id.rowUpdateFilters).setOnClickListener(v -> {
+                if (tvStatus != null) tvStatus.setText("Updating…");
+                ab.updateFilters(ctx,
+                    () -> {
+                        if (tvStatus != null) tvStatus.post(() -> tvStatus.setText("Updated ✓"));
+                        Toast.makeText(ctx, "Filter lists updated: " + ab.getDomainRulesCount() + " domains", Toast.LENGTH_LONG).show();
+                    },
+                    err -> {
+                        if (tvStatus != null) tvStatus.post(() -> tvStatus.setText("Failed"));
+                        Toast.makeText(ctx, "Update failed: " + err, Toast.LENGTH_SHORT).show();
+                    }
+                );
+            });
+        }
+
         dialog.show();
     }
 

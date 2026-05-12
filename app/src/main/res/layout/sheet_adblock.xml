@@ -101,6 +101,22 @@
     <View android:layout_width="match_parent" android:layout_height="1dp"
         android:background="@color/divider" android:layout_marginStart="16dp" />
 
+    <!-- Update filters -->
+    <LinearLayout android:id="@+id/rowUpdateFilters"
+        android:layout_width="match_parent" android:layout_height="52dp"
+        android:gravity="center_vertical" android:paddingStart="16dp" android:paddingEnd="16dp"
+        android:background="?attr/selectableItemBackground">
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:text="Update filter lists"
+            android:textColor="@color/text_primary" android:textSize="15sp" />
+        <TextView android:id="@+id/tvUpdateStatus"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textColor="@color/colorPrimary" android:textSize="12sp" android:text="Update" />
+    </LinearLayout>
+
+    <View android:layout_width="match_parent" android:layout_height="1dp"
+        android:background="@color/divider" android:layout_marginStart="16dp" />
+
     <!-- Filter list info -->
     <LinearLayout android:layout_width="match_parent" android:layout_height="48dp"
         android:gravity="center_vertical" android:paddingStart="16dp" android:paddingEnd="16dp">

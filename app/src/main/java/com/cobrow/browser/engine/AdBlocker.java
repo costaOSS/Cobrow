@@ -305,4 +305,68 @@ public class AdBlocker {
     public int getRegexRulesCount() { return regexRules.size(); }
 
     public void addCustomRule(String rule) { parseLine(rule); }
+
+    /** Downloads fresh filter lists from the internet and reloads. */
+    public void updateFilters(Context ctx, Runnable onDone, java.util.function.Consumer<String> onError) {
+        new Thread(() -> {
+            String[][] lists = {
+                {"filters/easylist.txt",       "https://easylist.to/easylist/easylist.txt"},
+                {"filters/easyprivacy.txt",    "https://easylist.to/easylist/easyprivacy.txt"},
+                {"filters/ublock_filters.txt", "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/filters.txt"},
+                {"filters/ublock_cookies.txt", "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/annoyances-cookies.txt"},
+                {"filters/ublock_badware.txt", "https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/badware.txt"},
+                {"filters/peterlowe.txt",      "https://pgl.yoyo.org/adservers/serverlist.php?hostformat=adblockplus&showintro=0"},
+            };
+            try {
+                java.io.File filesDir = ctx.getFilesDir();
+                java.io.File filterDir = new java.io.File(filesDir, "filters");
+                filterDir.mkdirs();
+                for (String[] entry : lists) {
+                    java.net.URL url = new java.net.URL(entry[1]);
+                    java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+                    conn.setRequestProperty("Accept-Encoding", "gzip");
+                    conn.setConnectTimeout(15000);
+                    conn.setReadTimeout(30000);
+                    java.io.InputStream in = conn.getInputStream();
+                    if ("gzip".equals(conn.getContentEncoding()))
+                        in = new java.util.zip.GZIPInputStream(in);
+                    java.io.File out = new java.io.File(filterDir, new java.io.File(entry[0]).getName());
+                    try (java.io.InputStream is = in;
+                         java.io.FileOutputStream fos = new java.io.FileOutputStream(out)) {
+                        byte[] buf = new byte[8192]; int n;
+                        while ((n = is.read(buf)) != -1) fos.write(buf, 0, n);
+                    }
+                    conn.disconnect();
+                }
+                // Reload from updated files
+                blockedDomains.clear(); exceptionDomains.clear();
+                regexRules.clear(); thirdPartyDomains.clear();
+                elementHideRules.clear(); genericHideSelectors.clear();
+                for (String[] entry : lists) {
+                    java.io.File f = new java.io.File(new java.io.File(filesDir, "filters"),
+                            new java.io.File(entry[0]).getName());
+                    loadFileFromDisk(f);
+                }
+                totalRulesLoaded = blockedDomains.size() + regexRules.size() + thirdPartyDomains.size();
+                Log.d(TAG, "Updated: " + totalRulesLoaded + " rules");
+                if (onDone != null) onDone.run();
+            } catch (Exception e) {
+                Log.e(TAG, "Update failed: " + e.getMessage());
+                if (onError != null) onError.accept(e.getMessage());
+            }
+        }).start();
+    }
+
+    private void loadFileFromDisk(java.io.File file) {
+        try (BufferedReader br = new BufferedReader(new java.io.FileReader(file), 65536)) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty() || line.startsWith("!") || line.startsWith("[") || line.startsWith("#")) continue;
+                parseLine(line);
+            }
+        } catch (IOException e) {
+            Log.w(TAG, "Could not read " + file.getName() + ": " + e.getMessage());
+        }
+    }
 }
