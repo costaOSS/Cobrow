@@ -10,8 +10,13 @@ public class UrlUtils {
     }
 
     public static String toUrl(String input, String searchEngine) {
-        if (input == null || input.trim().isEmpty()) return "about:blank";
+        if (input == null || input.trim().isEmpty()) return "file:///android_asset/new_tab.html";
         input = input.trim();
+        if (input.equalsIgnoreCase("cobrow://newtab")) return "file:///android_asset/new_tab.html";
+        if (input.startsWith("cobrow://search?q=")) {
+            String q = input.substring("cobrow://search?q=".length());
+            return toUrl(android.net.Uri.decode(q), searchEngine);
+        }
         if (input.startsWith("about:") || input.startsWith("file:")) return input;
         if (URLUtil.isValidUrl(input)) return input;
         // Has a dot and no spaces → likely a URL

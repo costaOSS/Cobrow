@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Track current page host safely (updated on main thread)
     private volatile String currentPageHost = null;
-    private static final String HOME_URL = "https://www.google.com";
+    private static final String HOME_URL = "cobrow://newtab";
     private static final String PREF_HOME = "home_url";
     private static final String PREF_UA = "user_agent";
     private static final String PREF_JS = "javascript";

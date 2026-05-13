@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            width: 90%;
+            max-width: 600px;
+        }
+        h1 {
+            font-size: 3rem;
+            color: #4285f4;
+            margin-bottom: 2rem;
+        }
+        .search-box {
+            width: 100%;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            border: 1px solid #dfe1e5;
+            border-radius: 24px;
+            box-shadow: 0 1px 6px rgba(32,33,36,.28);
+            outline: none;
+            transition: box-shadow 0.3s;
+        }
+        .search-box:focus {
+            box-shadow: 0 1px 8px rgba(32,33,36,.35);
+        }
+        .clock {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #5f6368;
+        }
+        .quick-links {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        .link-item {
+            margin: 10px;
+            text-decoration: none;
+            color: #3c4043;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .link-icon {
+            width: 48dp;
+            height: 48dp;
+            background-color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #4285f4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="clock" id="clock"></div>
+        <h1>Cobrow</h1>
+        <form onsubmit="search(); return false;">
+            <input type="text" id="q" class="search-box" placeholder="Search or enter URL" autofocus>
+        </form>
+        <div class="quick-links">
+            <a href="https://www.google.com" class="link-item">
+                <div class="link-icon">G</div>
+                <span>Google</span>
+            </a>
+            <a href="https://www.youtube.com" class="link-item">
+                <div class="link-icon">Y</div>
+                <span>YouTube</span>
+            </a>
+            <a href="https://www.github.com" class="link-item">
+                <div class="link-icon">GH</div>
+                <span>GitHub</span>
+            </a>
+            <a href="https://www.reddit.com" class="link-item">
+                <div class="link-icon">R</div>
+                <span>Reddit</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function updateClock() {
+            var now = new Date();
+            var h = now.getHours();
+            var m = now.getMinutes();
+            if (m < 10) m = "0" + m;
+            document.getElementById('clock').innerText = h + ":" + m;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        function search() {
+            var q = document.getElementById('q').value;
+            window.location.href = "cobrow://search?q=" + encodeURIComponent(q);
+        }
+    </script>
+</body>
+</html>
