@@ -120,6 +120,10 @@ public class BottomMenuSheet {
             ctx.startActivity(new Intent(ctx, DownloadsActivity.class));
             dialog.dismiss();
         });
+        dialog.findViewById(R.id.menuPrint).setOnClickListener(v -> {
+            if (main != null) main.printPage();
+            dialog.dismiss();
+        });
 
         // Reflect current states
         if (main != null) {

@@ -15,6 +15,9 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.print.PrintAttributes;
+import android.print.PrintDocumentAdapter;
+import android.print.PrintManager;
 import android.webkit.CookieManager;
 import android.webkit.URLUtil;
 import android.webkit.WebChromeClient;
@@ -435,6 +438,15 @@ public class MainActivity extends AppCompatActivity {
         String url = webView.getUrl();
         if (url == null) return;
         webView.loadUrl("view-source:" + url);
+    }
+
+    public void printPage() {
+        PrintManager printManager = (PrintManager) getSystemService(Context.PRINT_SERVICE);
+        String jobName = getString(R.string.app_name) + " Document";
+        PrintDocumentAdapter printAdapter = webView.createPrintDocumentAdapter(jobName);
+        if (printManager != null) {
+            printManager.print(jobName, printAdapter, new PrintAttributes.Builder().build());
+        }
     }
 
     public void showPageInfo() {

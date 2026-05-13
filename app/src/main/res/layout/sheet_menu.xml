@@ -163,7 +163,13 @@
                 android:text="Downloads" style="@style/MenuLabelStyle" />
         </LinearLayout>
 
-        <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+        <LinearLayout android:id="@+id/menuPrint" style="@style/MenuItemStyle">
+            <ImageView android:layout_width="28dp" android:layout_height="28dp"
+                android:src="@drawable/ic_code" android:tint="@color/icon_color" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Print/PDF" style="@style/MenuLabelStyle" />
+        </LinearLayout>
+
         <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
         <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
     </LinearLayout>
