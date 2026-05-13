@@ -44,6 +44,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
@@ -106,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
     // Track current page host safely (updated on main thread)
     private volatile String currentPageHost = null;
     private volatile SitePreference currentSitePreference = null;
+    private String currentBrowserUrl = null;
     private static final String HOME_URL = "cobrow://newtab";
     private static final String NEW_TAB_ASSET_URL = "file:///android_asset/new_tab.html";
     private static final String PREF_HOME = "home_url";
@@ -192,6 +194,7 @@ public class MainActivity extends AppCompatActivity {
         setupFullscreenScroll();
         setupScrollToTop();
         setupLongClickMenu();
+        setupSystemBackHandling();
         applyAccentColor();
 
         // Initialize tabs
@@ -331,7 +334,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupButtons() {
-        btnBack.setOnClickListener(v -> { if (webView.canGoBack()) webView.goBack(); });
+        btnBack.setOnClickListener(v -> navigateBack());
         btnForward.setOnClickListener(v -> { if (webView.canGoForward()) webView.goForward(); });
         btnRefresh.setOnClickListener(v -> {
             if (webView.getProgress() < 100) webView.stopLoading();
@@ -690,6 +693,7 @@ public class MainActivity extends AppCompatActivity {
     public void loadUrl(String input) {
         String engine = prefs.getString(PREF_SEARCH_ENGINE, DEFAULT_SEARCH_URL);
         String targetUrl = UrlUtils.toUrl(input, engine);
+        currentBrowserUrl = targetUrl;
         updateUrlBarForUrl(targetUrl);
         if (requiresLocalNetworkPermission(targetUrl)) {
             pendingLocalNetworkUrl = targetUrl;
@@ -701,6 +705,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateUrlBarForUrl(String url) {
         if (url == null) return;
+        currentBrowserUrl = url;
         if (isNewTabUrl(url)) {
             urlBar.setText("");
             urlBar.setHint(R.string.search_hint);
@@ -711,6 +716,43 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean isNewTabUrl(String url) {
         return NEW_TAB_ASSET_URL.equalsIgnoreCase(url) || HOME_URL.equalsIgnoreCase(url);
+    }
+
+    private boolean canNavigateBack() {
+        String currentUrl = getCurrentBrowserUrl();
+        return webView.canGoBack() || (currentUrl != null && !isNewTabUrl(currentUrl));
+    }
+
+    private void navigateBack() {
+        if (webView.canGoBack()) {
+            webView.goBack();
+            return;
+        }
+        String currentUrl = getCurrentBrowserUrl();
+        if (currentUrl != null && !isNewTabUrl(currentUrl)) {
+            loadUrl(prefs.getString(PREF_HOME, HOME_URL));
+        }
+    }
+
+    private String getCurrentBrowserUrl() {
+        String url = webView.getUrl();
+        return url != null ? url : currentBrowserUrl;
+    }
+
+    private void setupSystemBackHandling() {
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (findBar.getVisibility() == View.VISIBLE) {
+                    hideFindInPage();
+                } else if (canNavigateBack()) {
+                    navigateBack();
+                } else {
+                    setEnabled(false);
+                    getOnBackPressedDispatcher().onBackPressed();
+                }
+            }
+        });
     }
 
     private boolean requiresLocalNetworkPermission(String url) {
@@ -875,7 +917,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         if (findBar.getVisibility() == View.VISIBLE) hideFindInPage();
-        else if (webView.canGoBack()) webView.goBack();
+        else if (canNavigateBack()) navigateBack();
         else super.onBackPressed();
     }
 
@@ -1018,7 +1060,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateNavButtons() {
-        btnBack.setAlpha(webView.canGoBack() ? 1f : 0.4f);
+        btnBack.setAlpha(canNavigateBack() ? 1f : 0.4f);
         btnForward.setAlpha(webView.canGoForward() ? 1f : 0.4f);
     }
 
