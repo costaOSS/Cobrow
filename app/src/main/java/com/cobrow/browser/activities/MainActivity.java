@@ -172,10 +172,20 @@ public class MainActivity extends AppCompatActivity {
             public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
                 float dx = e2.getX() - e1.getX();
                 float dy = e2.getY() - e1.getY();
+                
+                // Multi-finger detection (Simplified: check pointer count)
+                int pointerCount = e2.getPointerCount();
+                
                 if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
                     if (dx < 0) switchToNextTab();
                     else switchToPrevTab();
                     return true;
+                } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > SWIPE_MIN_DISTANCE && Math.abs(velocityY) > SWIPE_THRESHOLD_VELOCITY) {
+                    if (pointerCount >= 2) {
+                        if (dy < 0) addNewTab(HOME_URL); // Swipe up
+                        else closeTab(currentTabIndex); // Swipe down
+                        return true;
+                    }
                 }
                 return false;
             }
