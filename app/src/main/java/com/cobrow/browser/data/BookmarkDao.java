@@ -19,4 +19,7 @@ public interface BookmarkDao {
 
     @Query("SELECT * FROM bookmarks WHERE url = :url LIMIT 1")
     Bookmark findByUrl(String url);
+
+    @Query("SELECT * FROM bookmarks WHERE title LIKE '%' || :q || '%' OR url LIKE '%' || :q || '%' ORDER BY createdAt DESC")
+    List<Bookmark> search(String q);
 }

@@ -15,7 +15,7 @@
         android:paddingEnd="8dp"
         android:elevation="4dp">
 
-        <EditText
+        <AutoCompleteTextView
             android:id="@+id/urlBar"
             android:layout_width="0dp"
             android:layout_height="36dp"
@@ -30,7 +30,10 @@
             android:paddingEnd="12dp"
             android:singleLine="true"
             android:textColor="@color/text_primary"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            android:completionThreshold="1"
+            android:dropDownWidth="match_parent"
+            android:dropDownAnchor="@id/urlBar" />
 
         <TextView
             android:id="@+id/blockedCount"

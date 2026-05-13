@@ -24,6 +24,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebStorage;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -37,6 +38,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.cobrow.browser.R;
+import com.cobrow.browser.adapters.UrlSuggestionsAdapter;
 import com.cobrow.browser.data.CobrowDatabase;
 import com.cobrow.browser.data.HistoryItem;
 import com.cobrow.browser.engine.AdBlocker;
@@ -55,7 +57,7 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity {
 
     private WebView webView;
-    private EditText urlBar;
+    private AutoCompleteTextView urlBar;
     private ProgressBar progressBar;
     private SwipeRefreshLayout swipeRefresh;
     private ImageButton btnBack, btnForward, btnRefresh, btnHome, btnTabs, btnMenu;
@@ -202,6 +204,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupUrlBar() {
+        UrlSuggestionsAdapter adapter = new UrlSuggestionsAdapter(this);
+        urlBar.setAdapter(adapter);
+        urlBar.setOnItemClickListener((parent, view, position, id) -> {
+            UrlSuggestionsAdapter.Suggestion s = adapter.getItem(position);
+            loadUrl(s.url);
+            hideKeyboard();
+        });
         urlBar.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_GO ||
                     (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
