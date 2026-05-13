@@ -96,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREF_ADBLOCK = "adblock";
     private static final String PREF_NIGHT = "night_mode";
     private static final String PREF_TEXT_SIZE = "text_size";
+    private static final String PREF_BLOCKED_LIFETIME = "blocked_lifetime";
 
     private static final String PREF_SEARCH_ENGINE = "search_engine";
     private static final String DEFAULT_SEARCH_URL = "https://www.google.com/search?q=";
@@ -715,6 +716,8 @@ public class MainActivity extends AppCompatActivity {
             String url = request.getUrl().toString();
             if (prefs.getBoolean(PREF_ADBLOCK, true) && AdBlocker.getInstance().shouldBlock(url, currentPageHost)) {
                 adsBlocked++;
+                int lifetime = prefs.getInt(PREF_BLOCKED_LIFETIME, 0) + 1;
+                prefs.edit().putInt(PREF_BLOCKED_LIFETIME, lifetime).apply();
                 runOnUiThread(() -> blockedCount.setText(String.valueOf(adsBlocked)));
                 return new WebResourceResponse("text/plain", "utf-8",
                         new ByteArrayInputStream("".getBytes()));

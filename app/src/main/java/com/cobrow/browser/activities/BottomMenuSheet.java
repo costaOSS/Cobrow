@@ -128,6 +128,12 @@ public class BottomMenuSheet {
             if (main != null) main.captureScreenshot();
             dialog.dismiss();
         });
+        dialog.findViewById(R.id.menuPrivacy).setOnClickListener(v -> {
+            Intent intent = new Intent(ctx, PrivacyActivity.class);
+            intent.putExtra("session_blocked", adsBlocked);
+            ctx.startActivity(intent);
+            dialog.dismiss();
+        });
 
         // Reflect current states
         if (main != null) {

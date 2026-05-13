@@ -177,7 +177,12 @@
                 android:text="Screenshot" style="@style/MenuLabelStyle" />
         </LinearLayout>
 
-        <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" />
+        <LinearLayout android:id="@+id/menuPrivacy" style="@style/MenuItemStyle">
+            <ImageView android:layout_width="28dp" android:layout_height="28dp"
+                android:src="@drawable/ic_shield" android:tint="@color/colorPrimary" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Privacy" style="@style/MenuLabelStyle" />
+        </LinearLayout>
     </LinearLayout>
 
 </LinearLayout>

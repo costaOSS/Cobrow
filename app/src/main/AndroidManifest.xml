@@ -54,6 +54,8 @@
             android:parentActivityName=".activities.MainActivity" />
         <activity android:name=".activities.DownloadsActivity"
             android:parentActivityName=".activities.MainActivity" />
+        <activity android:name=".activities.PrivacyActivity"
+            android:parentActivityName=".activities.MainActivity" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
