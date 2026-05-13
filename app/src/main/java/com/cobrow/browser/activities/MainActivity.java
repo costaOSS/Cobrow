@@ -250,6 +250,11 @@ public class MainActivity extends AppCompatActivity {
     private void setupSwipeRefresh() {
         swipeRefresh.setOnRefreshListener(() -> { webView.reload(); swipeRefresh.setRefreshing(false); });
         swipeRefresh.setColorSchemeResources(R.color.colorPrimary);
+        
+        // Fix conflict with WebView scroll
+        webView.getViewTreeObserver().addOnScrollChangedListener(() -> {
+            swipeRefresh.setEnabled(webView.getScrollY() == 0);
+        });
     }
 
     private void setupFindInPage() {
