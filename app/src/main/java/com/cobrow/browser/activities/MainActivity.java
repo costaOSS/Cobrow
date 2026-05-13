@@ -41,10 +41,16 @@ import com.cobrow.browser.data.CobrowDatabase;
 import com.cobrow.browser.data.HistoryItem;
 import com.cobrow.browser.engine.AdBlocker;
 import com.cobrow.browser.utils.UrlUtils;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
+import com.cobrow.browser.data.TabsManager;
+import com.cobrow.browser.data.Tab;
 
 import java.io.ByteArrayInputStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.List;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -54,6 +60,11 @@ public class MainActivity extends AppCompatActivity {
     private SwipeRefreshLayout swipeRefresh;
     private ImageButton btnBack, btnForward, btnRefresh, btnHome, btnTabs, btnMenu;
     private TextView blockedCount;
+
+    // Tabs
+    private TabsManager tabsManager;
+    private int currentTabIndex = 0;
+    private GestureDetector gestureDetector;
 
     // Find in page
     private LinearLayout findBar;
@@ -119,8 +130,40 @@ public class MainActivity extends AppCompatActivity {
         setupSwipeRefresh();
         setupFindInPage();
 
+        // Initialize tabs
+        tabsManager = new TabsManager(this);
+        if (tabsManager.getTabs().isEmpty()) {
+            tabsManager.addTab(new Tab(prefs.getString(PREF_HOME, HOME_URL), prefs.getString(PREF_HOME, HOME_URL)));
+            tabsManager.setCurrentIndex(0);
+        }
+        currentTabIndex = Math.max(0, Math.min(tabsManager.getCurrentIndex(), tabsManager.getTabs().size() - 1));
+
+        // Gesture detector for swipe left/right to change tabs
+        gestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
+            private static final int SWIPE_MIN_DISTANCE = 120;
+            private static final int SWIPE_THRESHOLD_VELOCITY = 200;
+            @Override
+            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+                float dx = e2.getX() - e1.getX();
+                float dy = e2.getY() - e1.getY();
+                if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                    if (dx < 0) switchToNextTab();
+                    else switchToPrevTab();
+                    return true;
+                }
+                return false;
+            }
+        });
+        webView.setOnTouchListener((v, event) -> { gestureDetector.onTouchEvent(event); return false; });
+
+        // Load URL: intent has priority, otherwise restore current tab
         String intentUrl = getIntent().getDataString();
-        loadUrl(intentUrl != null ? intentUrl : prefs.getString(PREF_HOME, HOME_URL));
+        if (intentUrl != null) {
+            loadUrl(intentUrl);
+        } else {
+            Tab cur = tabsManager.getTabs().get(currentTabIndex);
+            loadUrl(cur != null && cur.url != null && !cur.url.isEmpty() ? cur.url : prefs.getString(PREF_HOME, HOME_URL));
+        }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -388,8 +431,61 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 1001 && resultCode == RESULT_OK && data != null) {
-            String url = data.getDataString();
-            if (url != null) loadUrl(url);
+            int idx = data.getIntExtra("selected_index", -1);
+            if (idx >= 0) switchToTab(idx);
+        }
+    }
+
+    // Tab switching helpers
+    private void switchToTab(int idx) {
+        List<Tab> tabs = tabsManager.getTabs();
+        if (tabs == null || tabs.isEmpty()) return;
+        if (idx < 0 || idx >= tabs.size()) return;
+        // save current
+        try { tabsManager.updateTab(currentTabIndex, new Tab(webView.getTitle(), webView.getUrl())); } catch (Exception ignored) {}
+        currentTabIndex = idx;
+        tabsManager.setCurrentIndex(idx);
+        Tab t = tabs.get(idx);
+        if (t != null && t.url != null) loadUrl(t.url);
+    }
+
+    private void switchToNextTab() {
+        List<Tab> tabs = tabsManager.getTabs();
+        if (tabs.size() <= 1) return;
+        int next = (currentTabIndex + 1) % tabs.size();
+        switchToTab(next);
+    }
+
+    private void switchToPrevTab() {
+        List<Tab> tabs = tabsManager.getTabs();
+        if (tabs.size() <= 1) return;
+        int prev = (currentTabIndex - 1 + tabs.size()) % tabs.size();
+        switchToTab(prev);
+    }
+
+    private void addNewTab(String url) {
+        tabsManager.addTab(new Tab("", url != null ? url : prefs.getString(PREF_HOME, HOME_URL)));
+        switchToTab(tabsManager.getCurrentIndex());
+    }
+
+    private void closeTab(int idx) {
+        List<Tab> tabs = tabsManager.getTabs();
+        if (tabs.size() <= 1) {
+            // keep at least one tab: reset to home
+            tabsManager.saveTabs(new ArrayList<Tab>());
+            tabsManager.addTab(new Tab(prefs.getString(PREF_HOME, HOME_URL), prefs.getString(PREF_HOME, HOME_URL)));
+            switchToTab(0);
+            return;
+        }
+        boolean removingCurrent = (idx == currentTabIndex);
+        tabsManager.removeTab(idx);
+        if (removingCurrent) {
+            int newIdx = Math.max(0, Math.min(idx, tabsManager.getTabs().size() - 1));
+            switchToTab(newIdx);
+        } else {
+            // adjust current index if necessary
+            if (idx < currentTabIndex) currentTabIndex--;
+            tabsManager.setCurrentIndex(currentTabIndex);
         }
     }
 
