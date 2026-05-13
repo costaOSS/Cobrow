@@ -133,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
         // Initialize tabs
         tabsManager = new TabsManager(this);
         if (tabsManager.getTabs().isEmpty()) {
-            tabsManager.addTab(new Tab(prefs.getString(PREF_HOME, HOME_URL), prefs.getString(PREF_HOME, HOME_URL)));
+            tabsManager.addTab(new Tab(prefs.getString(PREF_HOME, HOME_URL), prefs.getString(PREF_HOME, HOME_URL), null, false));
             tabsManager.setCurrentIndex(0);
         }
         currentTabIndex = Math.max(0, Math.min(tabsManager.getCurrentIndex(), tabsManager.getTabs().size() - 1));
@@ -442,7 +442,7 @@ public class MainActivity extends AppCompatActivity {
         if (tabs == null || tabs.isEmpty()) return;
         if (idx < 0 || idx >= tabs.size()) return;
         // save current
-        try { tabsManager.updateTab(currentTabIndex, new Tab(webView.getTitle(), webView.getUrl())); } catch (Exception ignored) {}
+        try { tabsManager.updateTab(currentTabIndex, new com.cobrow.browser.data.Tab(webView.getTitle(), webView.getUrl(), null, isIncognito())); } catch (Exception ignored) {}
         currentTabIndex = idx;
         tabsManager.setCurrentIndex(idx);
         Tab t = tabs.get(idx);
@@ -464,7 +464,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void addNewTab(String url) {
-        tabsManager.addTab(new Tab("", url != null ? url : prefs.getString(PREF_HOME, HOME_URL)));
+        tabsManager.addTab(new com.cobrow.browser.data.Tab("", url != null ? url : prefs.getString(PREF_HOME, HOME_URL), null, false));
         switchToTab(tabsManager.getCurrentIndex());
     }
 
@@ -472,8 +472,8 @@ public class MainActivity extends AppCompatActivity {
         List<Tab> tabs = tabsManager.getTabs();
         if (tabs.size() <= 1) {
             // keep at least one tab: reset to home
-            tabsManager.saveTabs(new ArrayList<Tab>());
-            tabsManager.addTab(new Tab(prefs.getString(PREF_HOME, HOME_URL), prefs.getString(PREF_HOME, HOME_URL)));
+            tabsManager.saveTabs(new java.util.ArrayList<com.cobrow.browser.data.Tab>());
+            tabsManager.addTab(new com.cobrow.browser.data.Tab(prefs.getString(PREF_HOME, HOME_URL), prefs.getString(PREF_HOME, HOME_URL), null, false));
             switchToTab(0);
             return;
         }
@@ -537,6 +537,25 @@ public class MainActivity extends AppCompatActivity {
             if (prefs.getBoolean(PREF_NIGHT, false)) view.loadUrl(NIGHT_MODE_JS);
             if (prefs.getBoolean(PREF_ADBLOCK, true))
                 AdBlocker.getInstance().injectElementHiding(view, url);
+
+            // Capture thumbnail for the current tab
+            try {
+                int w = webView.getWidth();
+                int h = webView.getHeight();
+                if (w > 0 && h > 0) {
+                    int thumbW = 360; int thumbH = 240;
+                    Bitmap bmp = Bitmap.createBitmap(thumbW, thumbH, Bitmap.Config.ARGB_8888);
+                    android.graphics.Canvas canvas = new android.graphics.Canvas(bmp);
+                    float scale = Math.min((float) thumbW / Math.max(1, w), (float) thumbH / Math.max(1, h));
+                    canvas.scale(scale, scale);
+                    webView.draw(canvas);
+                    java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+                    bmp.compress(Bitmap.CompressFormat.PNG, 80, baos);
+                    String b64 = android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.NO_WRAP);
+                    // update tab
+                    try { tabsManager.updateTab(currentTabIndex, new com.cobrow.browser.data.Tab(view.getTitle(), url, b64, isIncognito())); } catch (Exception ignored) {}
+                }
+            } catch (Exception ignored) {}
         }
 
         @Override
