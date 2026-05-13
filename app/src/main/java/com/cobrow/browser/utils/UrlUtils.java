@@ -3,9 +3,13 @@ package com.cobrow.browser.utils;
 import android.webkit.URLUtil;
 
 public class UrlUtils {
-    private static final String SEARCH_ENGINE = "https://www.google.com/search?q=";
+    private static final String DEFAULT_SEARCH_ENGINE = "https://www.google.com/search?q=";
 
     public static String toUrl(String input) {
+        return toUrl(input, DEFAULT_SEARCH_ENGINE);
+    }
+
+    public static String toUrl(String input, String searchEngine) {
         if (input == null || input.trim().isEmpty()) return "about:blank";
         input = input.trim();
         if (input.startsWith("about:") || input.startsWith("file:")) return input;
@@ -15,6 +19,7 @@ public class UrlUtils {
             return "https://" + input;
         }
         // Search query
-        return SEARCH_ENGINE + android.net.Uri.encode(input);
+        String engine = (searchEngine != null && !searchEngine.isEmpty()) ? searchEngine : DEFAULT_SEARCH_ENGINE;
+        return engine + android.net.Uri.encode(input);
     }
 }

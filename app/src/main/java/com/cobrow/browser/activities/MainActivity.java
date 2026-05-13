@@ -89,6 +89,9 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREF_NIGHT = "night_mode";
     private static final String PREF_TEXT_SIZE = "text_size";
 
+    private static final String PREF_SEARCH_ENGINE = "search_engine";
+    private static final String DEFAULT_SEARCH_URL = "https://www.google.com/search?q=";
+
     // Night mode CSS injection
     private static final String NIGHT_MODE_JS =
         "javascript:(function(){" +
@@ -401,7 +404,8 @@ public class MainActivity extends AppCompatActivity {
     // ── Internal helpers ───────────────────────────────────────────────────────
 
     public void loadUrl(String input) {
-        webView.loadUrl(UrlUtils.toUrl(input));
+        String engine = prefs.getString(PREF_SEARCH_ENGINE, DEFAULT_SEARCH_URL);
+        webView.loadUrl(UrlUtils.toUrl(input, engine));
     }
 
     private void showMenu() {

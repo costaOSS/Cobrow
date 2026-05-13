@@ -37,6 +37,15 @@
                 android:layout_height="wrap_content" />
         </LinearLayout>
 
+        <!-- Search Engine -->
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Search Engine" android:textColor="@color/text_secondary"
+            android:textSize="12sp" android:layout_marginTop="16dp" android:layout_marginBottom="4dp" />
+        <Spinner android:id="@+id/spinnerSearchEngine"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:background="@drawable/url_bar_bg"
+            android:padding="10dp" />
+
         <!-- Home URL -->
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
             android:text="Home Page URL" android:textColor="@color/text_secondary"
