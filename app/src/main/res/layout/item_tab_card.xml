@@ -6,9 +6,20 @@
     android:layout_margin="8dp"
     card_view:cardCornerRadius="8dp">
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <View
+            android:id="@+id/groupIndicator"
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:visibility="gone" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
         <ImageView
             android:id="@+id/ivThumb"
@@ -80,5 +91,6 @@
         </LinearLayout>
 
     </RelativeLayout>
+    </LinearLayout>
 
 </androidx.cardview.widget.CardView>

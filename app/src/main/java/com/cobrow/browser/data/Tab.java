@@ -7,6 +7,8 @@ public class Tab {
     public String url;
     public String thumbnail; // base64 PNG
     public boolean incognito;
+    public String groupId; // null means no group
+    public int groupColor;
 
     public Tab(String title, String url) { this(title, url, null, false); }
 
@@ -15,6 +17,8 @@ public class Tab {
         this.url = url;
         this.thumbnail = thumbnail;
         this.incognito = incognito;
+        this.groupId = null;
+        this.groupColor = 0;
     }
 
     public JSONObject toJson() {
@@ -24,6 +28,8 @@ public class Tab {
             o.put("url", url != null ? url : "");
             o.put("thumbnail", thumbnail != null ? thumbnail : JSONObject.NULL);
             o.put("incognito", incognito);
+            o.put("groupId", groupId != null ? groupId : JSONObject.NULL);
+            o.put("groupColor", groupColor);
         } catch (Exception ignored) {}
         return o;
     }
@@ -33,6 +39,9 @@ public class Tab {
         String thumb = null;
         try { thumb = o.optString("thumbnail", null); } catch (Exception ignored) {}
         boolean inc = o.optBoolean("incognito", false);
-        return new Tab(o.optString("title", ""), o.optString("url", ""), thumb, inc);
+        Tab t = new Tab(o.optString("title", ""), o.optString("url", ""), thumb, inc);
+        t.groupId = o.optString("groupId", null);
+        t.groupColor = o.optInt("groupColor", 0);
+        return t;
     }
 }

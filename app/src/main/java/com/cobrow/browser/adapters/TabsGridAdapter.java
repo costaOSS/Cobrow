@@ -25,6 +25,7 @@ public class TabsGridAdapter extends RecyclerView.Adapter<TabsGridAdapter.VH> {
         void onTabClicked(int position);
         void onTabClosed(int position);
         void onTabCloned(int position);
+        void onTabLongClicked(int position);
     }
 
     private List<Tab> items = new ArrayList<>();
@@ -60,7 +61,18 @@ public class TabsGridAdapter extends RecyclerView.Adapter<TabsGridAdapter.VH> {
 
         holder.ivIncognito.setVisibility(t.incognito ? View.VISIBLE : View.GONE);
 
+        if (t.groupId != null) {
+            holder.groupIndicator.setVisibility(View.VISIBLE);
+            holder.groupIndicator.setBackgroundColor(t.groupColor);
+        } else {
+            holder.groupIndicator.setVisibility(View.GONE);
+        }
+
         holder.itemView.setOnClickListener(v -> { if (listener != null) listener.onTabClicked(holder.getAdapterPosition()); });
+        holder.itemView.setOnLongClickListener(v -> {
+            if (listener != null) listener.onTabLongClicked(holder.getAdapterPosition());
+            return true;
+        });
         holder.btnClose.setOnClickListener(v -> { if (listener != null) listener.onTabClosed(holder.getAdapterPosition()); });
         holder.btnClone.setOnClickListener(v -> { if (listener != null) listener.onTabCloned(holder.getAdapterPosition()); });
     }
@@ -81,12 +93,14 @@ public class TabsGridAdapter extends RecyclerView.Adapter<TabsGridAdapter.VH> {
 
     static class VH extends RecyclerView.ViewHolder {
         ImageView ivThumb, ivIncognito;
+        View groupIndicator;
         TextView tvTitle, tvUrl;
         ImageButton btnClose, btnClone;
         VH(@NonNull View v) {
             super(v);
             ivThumb = v.findViewById(R.id.ivThumb);
             ivIncognito = v.findViewById(R.id.ivIncognito);
+            groupIndicator = v.findViewById(R.id.groupIndicator);
             tvTitle = v.findViewById(R.id.tvTitle);
             tvUrl = v.findViewById(R.id.tvUrl);
             btnClose = v.findViewById(R.id.btnCloseTab);

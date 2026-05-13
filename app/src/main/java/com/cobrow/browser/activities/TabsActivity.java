@@ -118,4 +118,42 @@ public class TabsActivity extends AppCompatActivity implements TabsGridAdapter.L
             refresh();
         }
     }
+
+    @Override
+    public void onTabLongClicked(int position) {
+        List<Tab> tabs = tabsManager.getTabs();
+        if (position < 0 || position >= tabs.size()) return;
+        Tab t = tabs.get(position);
+
+        android.widget.EditText et = new android.widget.EditText(this);
+        et.setHint("Group Name");
+        et.setText(t.groupId != null ? t.groupId : "");
+        et.setPadding(48, 16, 48, 16);
+
+        new AlertDialog.Builder(this)
+                .setTitle("Tab Group")
+                .setMessage("Enter group name to cluster tabs:")
+                .setView(et)
+                .setPositiveButton("Group", (d, w) -> {
+                    String group = et.getText().toString().trim();
+                    if (group.isEmpty()) {
+                        t.groupId = null;
+                        t.groupColor = 0;
+                    } else {
+                        t.groupId = group;
+                        // Simple color based on name hash
+                        t.groupColor = android.graphics.Color.HSVToColor(new float[]{Math.abs(group.hashCode() % 360), 0.6f, 0.9f});
+                    }
+                    tabsManager.saveTabs(tabs);
+                    refresh();
+                })
+                .setNeutralButton("Remove Group", (d, w) -> {
+                    t.groupId = null;
+                    t.groupColor = 0;
+                    tabsManager.saveTabs(tabs);
+                    refresh();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
 }
