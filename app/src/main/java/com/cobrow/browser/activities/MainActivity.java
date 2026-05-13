@@ -107,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
     private volatile String currentPageHost = null;
     private volatile SitePreference currentSitePreference = null;
     private static final String HOME_URL = "cobrow://newtab";
+    private static final String NEW_TAB_ASSET_URL = "file:///android_asset/new_tab.html";
     private static final String PREF_HOME = "home_url";
     private static final String PREF_UA = "user_agent";
     private static final String PREF_JS = "javascript";
@@ -314,8 +315,12 @@ public class MainActivity extends AppCompatActivity {
             hideKeyboard();
         });
         urlBar.setOnEditorActionListener((v, actionId, event) -> {
+            boolean enterKeyUp = event != null
+                    && event.getKeyCode() == KeyEvent.KEYCODE_ENTER
+                    && event.getAction() == KeyEvent.ACTION_UP;
             if (actionId == EditorInfo.IME_ACTION_GO ||
-                    (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
+                    actionId == EditorInfo.IME_ACTION_SEARCH ||
+                    enterKeyUp) {
                 loadUrl(urlBar.getText().toString().trim());
                 hideKeyboard();
                 return true;
@@ -685,12 +690,27 @@ public class MainActivity extends AppCompatActivity {
     public void loadUrl(String input) {
         String engine = prefs.getString(PREF_SEARCH_ENGINE, DEFAULT_SEARCH_URL);
         String targetUrl = UrlUtils.toUrl(input, engine);
+        updateUrlBarForUrl(targetUrl);
         if (requiresLocalNetworkPermission(targetUrl)) {
             pendingLocalNetworkUrl = targetUrl;
             localNetworkPermissionLauncher.launch(PERMISSION_ACCESS_LOCAL_NETWORK);
             return;
         }
         webView.loadUrl(targetUrl);
+    }
+
+    private void updateUrlBarForUrl(String url) {
+        if (url == null) return;
+        if (isNewTabUrl(url)) {
+            urlBar.setText("");
+            urlBar.setHint(R.string.search_hint);
+        } else {
+            urlBar.setText(url);
+        }
+    }
+
+    private boolean isNewTabUrl(String url) {
+        return NEW_TAB_ASSET_URL.equalsIgnoreCase(url) || HOME_URL.equalsIgnoreCase(url);
     }
 
     private boolean requiresLocalNetworkPermission(String url) {
@@ -888,7 +908,7 @@ public class MainActivity extends AppCompatActivity {
             currentPageHost = extractHost(url);
             applySitePreferenceForHost(currentPageHost);
             progressBar.setVisibility(View.VISIBLE);
-            urlBar.setText(url);
+            updateUrlBarForUrl(url);
             btnRefresh.setImageResource(android.R.drawable.ic_menu_close_clear_cancel);
             updateNavButtons();
         }
@@ -923,7 +943,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onPageFinished(WebView view, String url) {
             progressBar.setVisibility(View.GONE);
-            urlBar.setText(url);
+            updateUrlBarForUrl(url);
             btnRefresh.setImageResource(android.R.drawable.ic_menu_rotate);
             updateNavButtons();
             saveToHistory(view.getTitle(), url);
@@ -958,6 +978,10 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             String url = request.getUrl().toString();
+            if (url.startsWith("cobrow://search?q=") || url.equalsIgnoreCase(HOME_URL)) {
+                loadUrl(url);
+                return true;
+            }
             if (url.startsWith("http") || url.startsWith("https") || url.startsWith("view-source:")) return false;
             try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); } catch (Exception ignored) {}
             return true;
