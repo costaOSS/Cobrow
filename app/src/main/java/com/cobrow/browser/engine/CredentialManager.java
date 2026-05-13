@@ -9,6 +9,7 @@ import androidx.appcompat.app.AlertDialog;
 
 import com.cobrow.browser.data.CobrowDatabase;
 import com.cobrow.browser.data.Credential;
+import com.cobrow.browser.utils.CryptoUtils;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -34,7 +35,7 @@ public class CredentialManager {
             for (Credential c : existing) {
                 if (c.username.equals(username)) {
                     found = true;
-                    if (!c.password.equals(password)) {
+                    if (!CryptoUtils.decrypt(c.password).equals(password)) {
                         // Offer update
                         showUpdateDialog(host, username, password, c);
                     }
@@ -53,7 +54,7 @@ public class CredentialManager {
                     .setTitle("Save Password?")
                     .setMessage("Do you want to save the password for " + username + " on " + host + "?")
                     .setPositiveButton("Save", (d, w) -> {
-                        executor.execute(() -> db.credentialDao().insert(new Credential(host, username, password)));
+                        executor.execute(() -> db.credentialDao().insert(new Credential(host, username, CryptoUtils.encrypt(password))));
                         Toast.makeText(context, "Saved", Toast.LENGTH_SHORT).show();
                     })
                     .setNegativeButton("Never", null)
@@ -69,7 +70,7 @@ public class CredentialManager {
                     .setPositiveButton("Update", (d, w) -> {
                         executor.execute(() -> {
                             db.credentialDao().delete(old);
-                            db.credentialDao().insert(new Credential(host, username, password));
+                            db.credentialDao().insert(new Credential(host, username, CryptoUtils.encrypt(password)));
                         });
                         Toast.makeText(context, "Updated", Toast.LENGTH_SHORT).show();
                     })
@@ -83,12 +84,18 @@ public class CredentialManager {
             List<Credential> credentials = db.credentialDao().getByHost(host);
             if (!credentials.isEmpty()) {
                 Credential c = credentials.get(0); // Take first for now
+                String password = CryptoUtils.decrypt(c.password);
+                if (!CryptoUtils.isEncrypted(c.password)) {
+                    c.password = CryptoUtils.encrypt(c.password);
+                    db.credentialDao().delete(credentials.get(0));
+                    db.credentialDao().insert(c);
+                }
                 String js = "javascript:(function(){" +
                         "var inputs = document.getElementsByTagName('input');" +
                         "for(var i=0; i<inputs.length; i++){" +
                         "  if(inputs[i].type == 'password'){" +
-                        "    inputs[i].value = '" + c.password + "';" +
-                        "    if(i > 0 && (inputs[i-1].type == 'text' || inputs[i-1].type == 'email')) inputs[i-1].value = '" + c.username + "';" +
+                        "    inputs[i].value = '" + escapeJs(password) + "';" +
+                        "    if(i > 0 && (inputs[i-1].type == 'text' || inputs[i-1].type == 'email')) inputs[i-1].value = '" + escapeJs(c.username) + "';" +
                         "  }" +
                         "}" +
                         "})()";
@@ -111,5 +118,10 @@ public class CredentialManager {
                 "});" +
                 "})()";
         webView.loadUrl(js);
+    }
+
+    private String escapeJs(String value) {
+        if (value == null) return "";
+        return value.replace("\\", "\\\\").replace("'", "\\'");
     }
 }

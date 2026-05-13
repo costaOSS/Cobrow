@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.content.res.Configuration;
+import android.net.http.SslError;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -19,8 +21,12 @@ import android.print.PrintAttributes;
 import android.print.PrintDocumentAdapter;
 import android.print.PrintManager;
 import android.webkit.CookieManager;
+import android.webkit.GeolocationPermissions;
+import android.webkit.PermissionRequest;
+import android.webkit.SslErrorHandler;
 import android.webkit.URLUtil;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
@@ -28,6 +34,7 @@ import android.webkit.WebStorage;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AutoCompleteTextView;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -36,6 +43,8 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -47,19 +56,21 @@ import com.cobrow.browser.R;
 import com.cobrow.browser.adapters.UrlSuggestionsAdapter;
 import com.cobrow.browser.data.CobrowDatabase;
 import com.cobrow.browser.data.HistoryItem;
+import com.cobrow.browser.data.SitePreference;
 import com.cobrow.browser.engine.AdBlocker;
 import com.cobrow.browser.engine.CredentialManager;
+import com.cobrow.browser.utils.ThemeUtils;
 import com.cobrow.browser.utils.UrlUtils;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import com.cobrow.browser.data.TabsManager;
 import com.cobrow.browser.data.Tab;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.ByteArrayInputStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.List;
-import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -68,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private SwipeRefreshLayout swipeRefresh;
     private ImageButton btnBack, btnForward, btnRefresh, btnHome, btnTabs, btnMenu;
+    private FloatingActionButton btnScrollTop;
     private TextView blockedCount;
 
     // Tabs
@@ -89,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Track current page host safely (updated on main thread)
     private volatile String currentPageHost = null;
+    private volatile SitePreference currentSitePreference = null;
     private static final String HOME_URL = "cobrow://newtab";
     private static final String PREF_HOME = "home_url";
     private static final String PREF_UA = "user_agent";
@@ -100,6 +113,16 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String PREF_SEARCH_ENGINE = "search_engine";
     private static final String DEFAULT_SEARCH_URL = "https://www.google.com/search?q=";
+
+    private final ActivityResultLauncher<Intent> tabsLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                Intent data = result.getData();
+                if (result.getResultCode() == RESULT_OK && data != null) {
+                    int idx = data.getIntExtra("selected_index", -1);
+                    if (idx >= 0) switchToTab(idx);
+                }
+            });
 
     // Night mode CSS injection
     private static final String NIGHT_MODE_JS =
@@ -118,15 +141,12 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("SetJavaScriptEnabled")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeUtils.applyNightMode(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         prefs = getSharedPreferences("cobrow_prefs", MODE_PRIVATE);
-
-        // Apply night mode
-        if (prefs.getBoolean(PREF_NIGHT, false)) {
-            androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES);
-        }
+        ThemeUtils.applySystemBars(this);
 
         webView = findViewById(R.id.webView);
         urlBar = findViewById(R.id.urlBar);
@@ -138,6 +158,7 @@ public class MainActivity extends AppCompatActivity {
         btnHome = findViewById(R.id.btnHome);
         btnTabs = findViewById(R.id.btnTabs);
         btnMenu = findViewById(R.id.btnMenu);
+        btnScrollTop = findViewById(R.id.btnScrollTop);
         blockedCount = findViewById(R.id.blockedCount);
         findBar = findViewById(R.id.findBar);
         etFind = findViewById(R.id.etFind);
@@ -155,7 +176,9 @@ public class MainActivity extends AppCompatActivity {
         setupSwipeRefresh();
         setupFindInPage();
         setupFullscreenScroll();
+        setupScrollToTop();
         setupLongClickMenu();
+        applyAccentColor();
 
         // Initialize tabs
         tabsManager = new TabsManager(this);
@@ -214,6 +237,7 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("SetJavaScriptEnabled")
     private void setupWebView() {
         WebSettings s = webView.getSettings();
+        // JavaScript follows the global/site setting because modern websites need it, but users can disable it per site.
         s.setJavaScriptEnabled(prefs.getBoolean(PREF_JS, true));
         s.setDomStorageEnabled(true);
         s.setLoadWithOverviewMode(true);
@@ -221,6 +245,7 @@ public class MainActivity extends AppCompatActivity {
         s.setBuiltInZoomControls(true);
         s.setDisplayZoomControls(false);
         s.setSupportMultipleWindows(false);
+        s.setGeolocationEnabled(true);
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
         s.setCacheMode(WebSettings.LOAD_DEFAULT);
         s.setTextZoom(prefs.getInt(PREF_TEXT_SIZE, 100));
@@ -286,8 +311,16 @@ public class MainActivity extends AppCompatActivity {
             else webView.reload();
         });
         btnHome.setOnClickListener(v -> loadUrl(prefs.getString(PREF_HOME, HOME_URL)));
-        btnTabs.setOnClickListener(v -> startActivityForResult(new Intent(this, TabsActivity.class), 1001));
+        btnTabs.setOnClickListener(v -> tabsLauncher.launch(new Intent(this, TabsActivity.class)));
         btnMenu.setOnClickListener(v -> showMenu());
+    }
+
+    private void applyAccentColor() {
+        int accent = ThemeUtils.getAccentColor(this);
+        ThemeUtils.tintProgress(progressBar, accent);
+        if (blockedCount != null) blockedCount.setTextColor(accent);
+        if (swipeRefresh != null) swipeRefresh.setColorSchemeColors(accent);
+        if (btnScrollTop != null) btnScrollTop.setBackgroundTintList(android.content.res.ColorStateList.valueOf(accent));
     }
 
     private void setupSwipeRefresh() {
@@ -305,7 +338,12 @@ public class MainActivity extends AppCompatActivity {
             webView.setOnScrollChangeListener((v, scrollX, scrollY, oldX, oldY) -> {
                 if (scrollY == 0) {
                     setToolbarVisible(true);
+                    if (btnScrollTop != null) btnScrollTop.hide();
                     return;
+                }
+                if (btnScrollTop != null) {
+                    if (scrollY > 1200) btnScrollTop.show();
+                    else btnScrollTop.hide();
                 }
                 int dy = scrollY - oldY;
                 if (dy > 10 && isToolbarVisible) {
@@ -315,6 +353,13 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    private void setupScrollToTop() {
+        btnScrollTop.setOnClickListener(v -> {
+            webView.scrollTo(0, 0);
+            btnScrollTop.hide();
+        });
     }
 
     private void setupLongClickMenu() {
@@ -452,9 +497,12 @@ public class MainActivity extends AppCompatActivity {
     public boolean isIncognito() { return isIncognito; }
 
     public void toggleNightMode() {
-        boolean night = !prefs.getBoolean(PREF_NIGHT, false);
-        prefs.edit().putBoolean(PREF_NIGHT, night).apply();
-        AppCompatDelegate.setDefaultNightMode(night ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);
+        boolean night = !"dark".equals(prefs.getString(ThemeUtils.PREF_THEME_MODE, prefs.getBoolean(PREF_NIGHT, false) ? "dark" : "system"));
+        prefs.edit()
+                .putBoolean(PREF_NIGHT, night)
+                .putString(ThemeUtils.PREF_THEME_MODE, night ? "dark" : "light")
+                .apply();
+        ThemeUtils.applyNightMode(this);
         applyNightModeToWebView(night);
         Toast.makeText(this, night ? "Night Mode ON" : "Night Mode OFF", Toast.LENGTH_SHORT).show();
     }
@@ -469,7 +517,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public boolean isNightMode() { return prefs.getBoolean(PREF_NIGHT, false); }
+    public boolean isNightMode() {
+        return "dark".equals(prefs.getString(ThemeUtils.PREF_THEME_MODE,
+                prefs.getBoolean(PREF_NIGHT, false) ? "dark" : "system"));
+    }
 
     public void showReaderMode() {
         String font = prefs.getString("reader_font", "Georgia, serif");
@@ -535,7 +586,55 @@ public class MainActivity extends AppCompatActivity {
                     "Title: " + (title != null ? title : "—") + "\n\n" +
                     "URL: " + (url != null ? url : "—") + "\n\n" +
                     "Connection: " + (isSecure ? "🔒 Secure (HTTPS)" : "⚠ Not Secure (HTTP)"))
+                .setNeutralButton("Site Settings", (dialog, which) -> showSiteSettings())
                 .setPositiveButton("OK", null)
+                .show();
+    }
+
+    private void showSiteSettings() {
+        String host = currentPageHost;
+        if (host == null || host.isEmpty()) {
+            Toast.makeText(this, "No site loaded", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(48, 16, 48, 0);
+
+        CheckBox js = new CheckBox(this);
+        js.setText("Allow JavaScript");
+        js.setChecked(currentSitePreference == null ? prefs.getBoolean(PREF_JS, true) : currentSitePreference.javascriptEnabled);
+        layout.addView(js);
+
+        CheckBox camera = new CheckBox(this);
+        camera.setText("Allow camera/microphone");
+        camera.setChecked(currentSitePreference != null && currentSitePreference.cameraAllowed);
+        layout.addView(camera);
+
+        CheckBox location = new CheckBox(this);
+        location.setText("Allow location");
+        location.setChecked(currentSitePreference != null && currentSitePreference.locationAllowed);
+        layout.addView(location);
+
+        new AlertDialog.Builder(this)
+                .setTitle("Site Settings")
+                .setMessage(host)
+                .setView(layout)
+                .setPositiveButton("Save", (dialog, which) -> {
+                    SitePreference preference = new SitePreference(host, js.isChecked(), camera.isChecked(), location.isChecked());
+                    currentSitePreference = preference;
+                    webView.getSettings().setJavaScriptEnabled(preference.javascriptEnabled);
+                    executor.execute(() -> CobrowDatabase.get(this).sitePreferenceDao().upsert(preference));
+                    Toast.makeText(this, "Site settings saved", Toast.LENGTH_SHORT).show();
+                })
+                .setNeutralButton("Reset", (dialog, which) -> {
+                    currentSitePreference = null;
+                    webView.getSettings().setJavaScriptEnabled(prefs.getBoolean(PREF_JS, true));
+                    executor.execute(() -> CobrowDatabase.get(this).sitePreferenceDao().deleteByHost(host));
+                    Toast.makeText(this, "Site settings reset", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Cancel", null)
                 .show();
     }
 
@@ -584,6 +683,39 @@ public class MainActivity extends AppCompatActivity {
         webView.loadUrl(UrlUtils.toUrl(input, engine));
     }
 
+    private void applySitePreferenceForHost(String host) {
+        if (host == null || host.isEmpty()) {
+            currentSitePreference = null;
+            webView.getSettings().setJavaScriptEnabled(prefs.getBoolean(PREF_JS, true));
+            return;
+        }
+        executor.execute(() -> {
+            SitePreference preference = CobrowDatabase.get(this).sitePreferenceDao().getByHost(host);
+            currentSitePreference = preference;
+            boolean jsEnabled = preference == null ? prefs.getBoolean(PREF_JS, true) : preference.javascriptEnabled;
+            runOnUiThread(() -> webView.getSettings().setJavaScriptEnabled(jsEnabled));
+        });
+    }
+
+    private void showCustomErrorPage(String title, String detail, String failingUrl) {
+        String escapedTitle = htmlEscape(title);
+        String escapedDetail = htmlEscape(detail);
+        String escapedUrl = htmlEscape(failingUrl != null ? failingUrl : "");
+        String html = "<!doctype html><html><head><meta name='viewport' content='width=device-width,initial-scale=1'>" +
+                "<style>body{font-family:sans-serif;margin:32px;color:#222;background:#fafafa;line-height:1.5}" +
+                ".box{max-width:720px;margin:auto}h1{font-size:24px}code{word-break:break-all;color:#555}" +
+                "button{padding:10px 14px;border:0;border-radius:6px;background:#5C6BC0;color:white}</style></head>" +
+                "<body><div class='box'><h1>" + escapedTitle + "</h1><p>" + escapedDetail + "</p>" +
+                "<p><code>" + escapedUrl + "</code></p><button onclick='history.back()'>Go back</button></div></body></html>";
+        webView.loadDataWithBaseURL(failingUrl, html, "text/html", "UTF-8", null);
+    }
+
+    private String htmlEscape(String value) {
+        if (value == null) return "";
+        return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+                .replace("\"", "&quot;").replace("'", "&#39;");
+    }
+
     private void showMenu() {
         new BottomMenuSheet(this, webView, prefs, adsBlocked).show();
     }
@@ -628,15 +760,6 @@ public class MainActivity extends AppCompatActivity {
     private void saveToHistory(String title, String url) {
         if (!isIncognito)
             executor.execute(() -> CobrowDatabase.get(this).historyDao().insert(new HistoryItem(title, url)));
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1001 && resultCode == RESULT_OK && data != null) {
-            int idx = data.getIntExtra("selected_index", -1);
-            if (idx >= 0) switchToTab(idx);
-        }
     }
 
     // Tab switching helpers
@@ -729,10 +852,38 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
             currentPageHost = extractHost(url);
+            applySitePreferenceForHost(currentPageHost);
             progressBar.setVisibility(View.VISIBLE);
             urlBar.setText(url);
             btnRefresh.setImageResource(android.R.drawable.ic_menu_close_clear_cancel);
             updateNavButtons();
+        }
+
+        @Override
+        public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+            if (request != null && request.isForMainFrame()) {
+                String description = error != null ? String.valueOf(error.getDescription()) : "The page could not be loaded.";
+                showCustomErrorPage("Page failed to load", description, request.getUrl() != null ? request.getUrl().toString() : view.getUrl());
+                return;
+            }
+            super.onReceivedError(view, request, error);
+        }
+
+        @Override
+        public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+            String url = error != null && error.getUrl() != null ? error.getUrl() : view.getUrl();
+            new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("Certificate warning")
+                    .setMessage("This site's certificate could not be verified.\n\n" +
+                            (url != null ? url + "\n\n" : "") +
+                            "Only continue if you trust this site.")
+                    .setPositiveButton("Continue", (dialog, which) -> handler.proceed())
+                    .setNegativeButton("Go back", (dialog, which) -> {
+                        handler.cancel();
+                        showCustomErrorPage("Certificate blocked", "Cobrow stopped loading this page because its certificate is invalid.", url);
+                    })
+                    .setOnCancelListener(dialog -> handler.cancel())
+                    .show();
         }
 
         @Override
@@ -742,7 +893,7 @@ public class MainActivity extends AppCompatActivity {
             btnRefresh.setImageResource(android.R.drawable.ic_menu_rotate);
             updateNavButtons();
             saveToHistory(view.getTitle(), url);
-            applyNightModeToWebView(prefs.getBoolean(PREF_NIGHT, false));
+            applyNightModeToWebView(isEffectiveNightMode());
             if (!isIncognito) {
                 credentialManager.autofill(view, currentPageHost);
                 credentialManager.injectFormDetection(view);
@@ -787,6 +938,25 @@ public class MainActivity extends AppCompatActivity {
             progressBar.setProgress(newProgress);
             if (newProgress == 100) progressBar.setVisibility(View.GONE);
         }
+
+        @Override
+        public void onPermissionRequest(PermissionRequest request) {
+            SitePreference preference = currentSitePreference;
+            if (preference != null && preference.cameraAllowed) {
+                request.grant(request.getResources());
+            } else {
+                request.deny();
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Camera/microphone blocked for this site", Toast.LENGTH_SHORT).show());
+            }
+        }
+
+        @Override
+        public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
+            SitePreference preference = currentSitePreference;
+            boolean allow = preference != null && preference.locationAllowed;
+            callback.invoke(origin, allow, false);
+            if (!allow) Toast.makeText(MainActivity.this, "Location blocked for this site", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void updateNavButtons() {
@@ -801,5 +971,13 @@ public class MainActivity extends AppCompatActivity {
             int e = url.indexOf('/', s);
             return e < 0 ? url.substring(s) : url.substring(s, e);
         } catch (Exception e) { return null; }
+    }
+
+    private boolean isEffectiveNightMode() {
+        String mode = prefs.getString(ThemeUtils.PREF_THEME_MODE, prefs.getBoolean(PREF_NIGHT, false) ? "dark" : "system");
+        if ("dark".equals(mode)) return true;
+        if ("light".equals(mode)) return false;
+        int nightMask = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        return nightMask == Configuration.UI_MODE_NIGHT_YES;
     }
 }

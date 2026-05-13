@@ -12,6 +12,10 @@ Cobrow is a native Android WebView browser focused on fast local browsing, bundl
 - Custom `cobrow://newtab` start page bundled in app assets.
 - Search suggestions from local history/bookmarks and selectable search engines.
 - Reader mode with configurable serif, sans-serif, or monospace font.
+- System, light, and dark theme modes with selectable accent colors.
+- Per-site JavaScript, camera/microphone, and location preferences.
+- Custom page-load and certificate warning handling.
+- Floating scroll-to-top control for long pages.
 - Find in page, text size controls, page info, view source, desktop mode, share, screenshot, save page as MHTML, and print/PDF export.
 - Backup and restore for bookmarks and history through JSON import/export.
 - App shortcuts for New Tab, New Incognito, and Bookmarks.

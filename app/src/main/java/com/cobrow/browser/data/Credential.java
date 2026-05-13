@@ -9,7 +9,7 @@ public class Credential {
     public int id;
     public String host;
     public String username;
-    public String password; // Should ideally be encrypted
+    public String password;
 
     public Credential(String host, String username, String password) {
         this.host = host;

@@ -14,11 +14,13 @@ import com.cobrow.browser.R;
 import com.cobrow.browser.adapters.TabsGridAdapter;
 import com.cobrow.browser.data.Tab;
 import com.cobrow.browser.data.TabsManager;
+import com.cobrow.browser.utils.ThemeUtils;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.List;
 
 public class TabsActivity extends AppCompatActivity implements TabsGridAdapter.Listener {
+    private static final String HOME_URL = "cobrow://newtab";
 
     private RecyclerView rvTabs;
     private FloatingActionButton fabAdd;
@@ -27,12 +29,15 @@ public class TabsActivity extends AppCompatActivity implements TabsGridAdapter.L
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeUtils.applyNightMode(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tabs_grid);
+        ThemeUtils.applySystemBars(this);
 
         tabsManager = new TabsManager(this);
         rvTabs = findViewById(R.id.rvTabs);
         fabAdd = findViewById(R.id.fabAddTab);
+        fabAdd.setBackgroundTintList(android.content.res.ColorStateList.valueOf(ThemeUtils.getAccentColor(this)));
 
         adapter = new TabsGridAdapter(this);
         rvTabs.setAdapter(adapter);
@@ -72,7 +77,7 @@ public class TabsActivity extends AppCompatActivity implements TabsGridAdapter.L
         refresh();
 
         fabAdd.setOnClickListener(v -> {
-            tabsManager.addTab(new Tab("", tabsManager.getTabs().isEmpty() ? "https://www.google.com" : tabsManager.getTabs().get(tabsManager.getTabs().size() - 1).url));
+            tabsManager.addTab(new Tab("", HOME_URL, null, false));
             refresh();
         });
     }

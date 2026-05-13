@@ -1,6 +1,7 @@
 package com.cobrow.browser.activities;
 
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.net.Uri;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
@@ -19,6 +20,7 @@ import com.cobrow.browser.data.Bookmark;
 import com.cobrow.browser.data.CobrowDatabase;
 import com.cobrow.browser.data.HistoryItem;
 import com.cobrow.browser.engine.AdBlocker;
+import com.cobrow.browser.utils.ThemeUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -62,8 +64,10 @@ public class SettingsActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeUtils.applyNightMode(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
+        ThemeUtils.applySystemBars(this);
         setTitle("Settings");
         if (getSupportActionBar() != null) getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
@@ -74,12 +78,18 @@ public class SettingsActivity extends AppCompatActivity {
         Switch switchDarkMode = findViewById(R.id.switchDarkMode);
         Spinner spinnerSearch = findViewById(R.id.spinnerSearchEngine);
         Spinner spinnerFont = findViewById(R.id.spinnerReaderFont);
+        Spinner spinnerThemeMode = findViewById(R.id.spinnerThemeMode);
+        Spinner spinnerAccentColor = findViewById(R.id.spinnerAccentColor);
         EditText etHomeUrl = findViewById(R.id.etHomeUrl);
         EditText etUserAgent = findViewById(R.id.etUserAgent);
+        int accent = ThemeUtils.getAccentColor(this);
+        findViewById(R.id.btnSaveSettings).setBackgroundTintList(ColorStateList.valueOf(accent));
 
         switchAdblock.setChecked(prefs.getBoolean("adblock", true));
         switchJs.setChecked(prefs.getBoolean("javascript", true));
-        switchDarkMode.setChecked(prefs.getBoolean("night_mode", false));
+        String currentThemeMode = prefs.getString(ThemeUtils.PREF_THEME_MODE,
+                prefs.getBoolean("night_mode", false) ? "dark" : "system");
+        switchDarkMode.setChecked("dark".equals(currentThemeMode));
         etHomeUrl.setText(prefs.getString("home_url", "cobrow://newtab"));
         etUserAgent.setText(prefs.getString("user_agent", ""));
 
@@ -109,6 +119,27 @@ public class SettingsActivity extends AppCompatActivity {
             }
         }
 
+        ArrayAdapter<String> themeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, ThemeUtils.THEME_MODE_NAMES);
+        themeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerThemeMode.setAdapter(themeAdapter);
+        for (int i = 0; i < ThemeUtils.THEME_MODE_VALUES.length; i++) {
+            if (ThemeUtils.THEME_MODE_VALUES[i].equals(currentThemeMode)) {
+                spinnerThemeMode.setSelection(i);
+                break;
+            }
+        }
+
+        ArrayAdapter<String> accentAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, ThemeUtils.ACCENT_NAMES);
+        accentAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerAccentColor.setAdapter(accentAdapter);
+        int currentAccent = prefs.getInt(ThemeUtils.PREF_ACCENT_COLOR, ThemeUtils.ACCENT_COLORS[0]);
+        for (int i = 0; i < ThemeUtils.ACCENT_COLORS.length; i++) {
+            if (ThemeUtils.ACCENT_COLORS[i] == currentAccent) {
+                spinnerAccentColor.setSelection(i);
+                break;
+            }
+        }
+
         switchAdblock.setOnCheckedChangeListener((btn, checked) -> {
             prefs.edit().putBoolean("adblock", checked).apply();
             AdBlocker.getInstance().setEnabled(checked);
@@ -116,10 +147,12 @@ public class SettingsActivity extends AppCompatActivity {
         switchJs.setOnCheckedChangeListener((btn, checked) ->
                 prefs.edit().putBoolean("javascript", checked).apply());
         switchDarkMode.setOnCheckedChangeListener((btn, checked) -> {
-            prefs.edit().putBoolean("night_mode", checked).apply();
-            androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
-                    checked ? androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES :
-                            androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO);
+            String mode = checked ? "dark" : "light";
+            prefs.edit().putBoolean("night_mode", checked).putString(ThemeUtils.PREF_THEME_MODE, mode).apply();
+            for (int i = 0; i < ThemeUtils.THEME_MODE_VALUES.length; i++) {
+                if (ThemeUtils.THEME_MODE_VALUES[i].equals(mode)) spinnerThemeMode.setSelection(i);
+            }
+            ThemeUtils.applyNightMode(this);
         });
 
         findViewById(R.id.btnSaveSettings).setOnClickListener(v -> {
@@ -128,7 +161,11 @@ public class SettingsActivity extends AppCompatActivity {
                     .putString("user_agent", etUserAgent.getText().toString().trim())
                     .putString("search_engine", SEARCH_URLS[spinnerSearch.getSelectedItemPosition()])
                     .putString("reader_font", FONT_VALUES[spinnerFont.getSelectedItemPosition()])
+                    .putString(ThemeUtils.PREF_THEME_MODE, ThemeUtils.THEME_MODE_VALUES[spinnerThemeMode.getSelectedItemPosition()])
+                    .putBoolean("night_mode", "dark".equals(ThemeUtils.THEME_MODE_VALUES[spinnerThemeMode.getSelectedItemPosition()]))
+                    .putInt(ThemeUtils.PREF_ACCENT_COLOR, ThemeUtils.ACCENT_COLORS[spinnerAccentColor.getSelectedItemPosition()])
                     .apply();
+            ThemeUtils.applyNightMode(this);
             Toast.makeText(this, "Settings saved", Toast.LENGTH_SHORT).show();
             finish();
         });

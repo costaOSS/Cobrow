@@ -5,7 +5,7 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
-@Database(entities = {Bookmark.class, HistoryItem.class, DownloadItem.class, Credential.class}, version = 1, exportSchema = false)
+@Database(entities = {Bookmark.class, HistoryItem.class, DownloadItem.class, Credential.class, SitePreference.class}, version = 2, exportSchema = false)
 public abstract class CobrowDatabase extends RoomDatabase {
     private static CobrowDatabase instance;
 
@@ -13,6 +13,7 @@ public abstract class CobrowDatabase extends RoomDatabase {
     public abstract HistoryDao historyDao();
     public abstract DownloadDao downloadDao();
     public abstract CredentialDao credentialDao();
+    public abstract SitePreferenceDao sitePreferenceDao();
 
     public static synchronized CobrowDatabase get(Context ctx) {
         if (instance == null) {
