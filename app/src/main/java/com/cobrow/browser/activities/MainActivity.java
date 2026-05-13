@@ -449,6 +449,27 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void captureScreenshot() {
+        try {
+            Bitmap bitmap = Bitmap.createBitmap(webView.getWidth(), webView.getHeight(), Bitmap.Config.ARGB_8888);
+            android.graphics.Canvas canvas = new android.graphics.Canvas(bitmap);
+            webView.draw(canvas);
+
+            String fileName = "Cobrow_Screenshot_" + System.currentTimeMillis() + ".png";
+            java.io.File file = new java.io.File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), fileName);
+            java.io.FileOutputStream out = new java.io.FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+            out.flush();
+            out.close();
+
+            // Notify gallery
+            android.media.MediaScannerConnection.scanFile(this, new String[]{file.getAbsolutePath()}, null, null);
+            Toast.makeText(this, "Screenshot saved to Pictures", Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Toast.makeText(this, "Failed to capture screenshot", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     public void showPageInfo() {
         String url = webView.getUrl();
         String title = webView.getTitle();

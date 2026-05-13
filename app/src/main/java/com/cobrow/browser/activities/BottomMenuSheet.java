@@ -124,6 +124,10 @@ public class BottomMenuSheet {
             if (main != null) main.printPage();
             dialog.dismiss();
         });
+        dialog.findViewById(R.id.menuScreenshot).setOnClickListener(v -> {
+            if (main != null) main.captureScreenshot();
+            dialog.dismiss();
+        });
 
         // Reflect current states
         if (main != null) {
