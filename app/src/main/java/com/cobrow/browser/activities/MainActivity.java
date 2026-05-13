@@ -472,6 +472,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean isNightMode() { return prefs.getBoolean(PREF_NIGHT, false); }
 
     public void showReaderMode() {
+        String font = prefs.getString("reader_font", "Georgia, serif");
         // Inject Readability-style JS to strip page to main content
         String js = "javascript:(function(){" +
             "var article=document.querySelector('article')||document.querySelector('main')||document.body;" +
@@ -479,10 +480,10 @@ public class MainActivity extends AppCompatActivity {
             "var content=article.innerText;" +
             "document.open();" +
             "document.write('<html><head><meta name=viewport content=width=device-width><style>" +
-            "body{max-width:680px;margin:24px auto;padding:0 16px;font-family:Georgia,serif;font-size:18px;line-height:1.7;color:#222;background:#fafafa;}" +
+            "body{max-width:680px;margin:24px auto;padding:0 16px;font-family:" + font + ";font-size:18px;line-height:1.7;color:#222;background:#fafafa;}" +
             "h1{font-size:24px;margin-bottom:8px;}" +
             "</style></head><body>" +
-            "<h1>'+title+'</h1><p>'+content.replace(/\\n/g,'</p><p>')+'</p>" +
+            "<h1>'+title+'</h1><p>'+content.replace(/\\\\n/g,'</p><p>')+'</p>" +
             "</body></html>');" +
             "document.close();})()";
         webView.loadUrl(js);

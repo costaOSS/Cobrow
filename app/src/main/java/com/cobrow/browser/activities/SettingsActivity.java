@@ -43,6 +43,9 @@ public class SettingsActivity extends AppCompatActivity {
             "https://www.startpage.com/do/search?q="
     };
 
+    private static final String[] FONT_NAMES = {"Serif", "Sans-serif", "Monospace"};
+    private static final String[] FONT_VALUES = {"Georgia, serif", "sans-serif", "monospace"};
+
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     private final ActivityResultLauncher<String> exportLauncher = registerForActivityResult(
@@ -70,13 +73,14 @@ public class SettingsActivity extends AppCompatActivity {
         Switch switchJs = findViewById(R.id.switchJs);
         Switch switchDarkMode = findViewById(R.id.switchDarkMode);
         Spinner spinnerSearch = findViewById(R.id.spinnerSearchEngine);
+        Spinner spinnerFont = findViewById(R.id.spinnerReaderFont);
         EditText etHomeUrl = findViewById(R.id.etHomeUrl);
         EditText etUserAgent = findViewById(R.id.etUserAgent);
 
         switchAdblock.setChecked(prefs.getBoolean("adblock", true));
         switchJs.setChecked(prefs.getBoolean("javascript", true));
         switchDarkMode.setChecked(prefs.getBoolean("night_mode", false));
-        etHomeUrl.setText(prefs.getString("home_url", "https://www.google.com"));
+        etHomeUrl.setText(prefs.getString("home_url", "cobrow://newtab"));
         etUserAgent.setText(prefs.getString("user_agent", ""));
 
         // Setup search engine spinner
@@ -88,6 +92,19 @@ public class SettingsActivity extends AppCompatActivity {
         for (int i = 0; i < SEARCH_URLS.length; i++) {
             if (SEARCH_URLS[i].equals(currentEngine)) {
                 spinnerSearch.setSelection(i);
+                break;
+            }
+        }
+
+        // Setup font spinner
+        ArrayAdapter<String> fontAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, FONT_NAMES);
+        fontAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerFont.setAdapter(fontAdapter);
+
+        String currentFont = prefs.getString("reader_font", FONT_VALUES[0]);
+        for (int i = 0; i < FONT_VALUES.length; i++) {
+            if (FONT_VALUES[i].equals(currentFont)) {
+                spinnerFont.setSelection(i);
                 break;
             }
         }
@@ -110,6 +127,7 @@ public class SettingsActivity extends AppCompatActivity {
                     .putString("home_url", etHomeUrl.getText().toString().trim())
                     .putString("user_agent", etUserAgent.getText().toString().trim())
                     .putString("search_engine", SEARCH_URLS[spinnerSearch.getSelectedItemPosition()])
+                    .putString("reader_font", FONT_VALUES[spinnerFont.getSelectedItemPosition()])
                     .apply();
             Toast.makeText(this, "Settings saved", Toast.LENGTH_SHORT).show();
             finish();
