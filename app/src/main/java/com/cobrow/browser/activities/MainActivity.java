@@ -150,9 +150,6 @@ public class MainActivity extends AppCompatActivity {
     private static final String NIGHT_MODE_REMOVE_JS =
         "javascript:(function(){var s=document.getElementById('cobrow-night');if(s)s.remove();})()";
 
-    private LinearLayout topBar, bottomBar;
-    private boolean isToolbarVisible = true;
-
     @SuppressLint("SetJavaScriptEnabled")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -181,9 +178,6 @@ public class MainActivity extends AppCompatActivity {
         btnFindPrev = findViewById(R.id.btnFindPrev);
         btnFindNext = findViewById(R.id.btnFindNext);
         btnFindClose = findViewById(R.id.btnFindClose);
-
-        topBar = (LinearLayout) urlBar.getParent();
-        bottomBar = (LinearLayout) btnBack.getParent();
 
         setupWebView();
         setupUrlBar();
@@ -352,19 +346,12 @@ public class MainActivity extends AppCompatActivity {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             webView.setOnScrollChangeListener((v, scrollX, scrollY, oldX, oldY) -> {
                 if (scrollY == 0) {
-                    setToolbarVisible(true);
                     if (btnScrollTop != null) btnScrollTop.hide();
                     return;
                 }
                 if (btnScrollTop != null) {
                     if (scrollY > 1200) btnScrollTop.show();
                     else btnScrollTop.hide();
-                }
-                int dy = scrollY - oldY;
-                if (dy > 10 && isToolbarVisible) {
-                    setToolbarVisible(false);
-                } else if (dy < -10 && !isToolbarVisible) {
-                    setToolbarVisible(true);
                 }
             });
         }
@@ -409,17 +396,6 @@ public class MainActivity extends AppCompatActivity {
             }
             return false;
         });
-    }
-
-    private void setToolbarVisible(boolean visible) {
-        if (isToolbarVisible == visible) return;
-        isToolbarVisible = visible;
-        
-        float topY = visible ? 0 : -topBar.getHeight();
-        float bottomY = visible ? 0 : bottomBar.getHeight();
-
-        topBar.animate().translationY(topY).setDuration(200).start();
-        bottomBar.animate().translationY(bottomY).setDuration(200).start();
     }
 
     private void setupFindInPage() {
