@@ -195,13 +195,22 @@ public class MainActivity extends AppCompatActivity {
         webView.setWebChromeClient(new CobrowChromeClient());
 
         webView.setDownloadListener((url, userAgent, contentDisposition, mimeType, contentLength) -> {
+            String fileName = URLUtil.guessFileName(url, contentDisposition, mimeType);
             DownloadManager.Request req = new DownloadManager.Request(Uri.parse(url));
             req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-            req.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS,
-                    URLUtil.guessFileName(url, contentDisposition, mimeType));
+            req.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
             req.addRequestHeader("User-Agent", userAgent);
             req.setMimeType(mimeType);
             ((DownloadManager) getSystemService(DOWNLOAD_SERVICE)).enqueue(req);
+            
+            // Record download in DB
+            executor.execute(() -> {
+                com.cobrow.browser.data.DownloadItem item = new com.cobrow.browser.data.DownloadItem(
+                        fileName, url, Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath() + "/" + fileName,
+                        contentLength, mimeType);
+                CobrowDatabase.get(this).downloadDao().insert(item);
+            });
+
             Toast.makeText(this, "Downloading...", Toast.LENGTH_SHORT).show();
         });
     }

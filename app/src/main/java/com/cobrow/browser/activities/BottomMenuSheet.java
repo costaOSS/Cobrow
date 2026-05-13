@@ -115,6 +115,12 @@ public class BottomMenuSheet {
             dialog.dismiss();
         });
 
+        // Row 5
+        dialog.findViewById(R.id.menuDownloads).setOnClickListener(v -> {
+            ctx.startActivity(new Intent(ctx, DownloadsActivity.class));
+            dialog.dismiss();
+        });
+
         // Reflect current states
         if (main != null) {
             updateToggleLabel(dialog, R.id.labelIncognito, "Incognito", main.isIncognito());
