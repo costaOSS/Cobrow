@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.content.res.Configuration;
+import android.content.pm.PackageManager;
 import android.net.http.SslError;
 import android.net.Uri;
 import android.os.Bundle;
@@ -113,6 +114,9 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String PREF_SEARCH_ENGINE = "search_engine";
     private static final String DEFAULT_SEARCH_URL = "https://www.google.com/search?q=";
+    private static final int ANDROID_17_API = 37;
+    private static final String PERMISSION_ACCESS_LOCAL_NETWORK = "android.permission.ACCESS_LOCAL_NETWORK";
+    private String pendingLocalNetworkUrl;
 
     private final ActivityResultLauncher<Intent> tabsLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -121,6 +125,17 @@ public class MainActivity extends AppCompatActivity {
                 if (result.getResultCode() == RESULT_OK && data != null) {
                     int idx = data.getIntExtra("selected_index", -1);
                     if (idx >= 0) switchToTab(idx);
+                }
+            });
+    private final ActivityResultLauncher<String> localNetworkPermissionLauncher = registerForActivityResult(
+            new ActivityResultContracts.RequestPermission(),
+            granted -> {
+                String url = pendingLocalNetworkUrl;
+                pendingLocalNetworkUrl = null;
+                if (granted && url != null) {
+                    webView.loadUrl(url);
+                } else if (url != null) {
+                    Toast.makeText(this, "Local network access is required for this address on Android 17+", Toast.LENGTH_LONG).show();
                 }
             });
 
@@ -680,7 +695,37 @@ public class MainActivity extends AppCompatActivity {
 
     public void loadUrl(String input) {
         String engine = prefs.getString(PREF_SEARCH_ENGINE, DEFAULT_SEARCH_URL);
-        webView.loadUrl(UrlUtils.toUrl(input, engine));
+        String targetUrl = UrlUtils.toUrl(input, engine);
+        if (requiresLocalNetworkPermission(targetUrl)) {
+            pendingLocalNetworkUrl = targetUrl;
+            localNetworkPermissionLauncher.launch(PERMISSION_ACCESS_LOCAL_NETWORK);
+            return;
+        }
+        webView.loadUrl(targetUrl);
+    }
+
+    private boolean requiresLocalNetworkPermission(String url) {
+        if (android.os.Build.VERSION.SDK_INT < ANDROID_17_API) return false;
+        if (!isLocalNetworkUrl(url)) return false;
+        return checkSelfPermission(PERMISSION_ACCESS_LOCAL_NETWORK) != PackageManager.PERMISSION_GRANTED;
+    }
+
+    private boolean isLocalNetworkUrl(String url) {
+        String host = extractHost(url);
+        if (host == null) return false;
+        host = host.toLowerCase(java.util.Locale.US);
+        if (host.startsWith("[") && host.endsWith("]")) host = host.substring(1, host.length() - 1);
+        if ("localhost".equals(host) || host.endsWith(".local") || "::1".equals(host)) return true;
+        if (host.startsWith("127.") || host.startsWith("10.") || host.startsWith("192.168.") || host.startsWith("169.254.")) return true;
+        String[] parts = host.split("\\.");
+        if (parts.length == 4) {
+            try {
+                int first = Integer.parseInt(parts[0]);
+                int second = Integer.parseInt(parts[1]);
+                return first == 172 && second >= 16 && second <= 31;
+            } catch (NumberFormatException ignored) {}
+        }
+        return false;
     }
 
     private void applySitePreferenceForHost(String host) {

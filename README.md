@@ -31,9 +31,19 @@ Cobrow is a native Android WebView browser focused on fast local browsing, bundl
 
 ## Requirements
 
-- Android Studio with Android SDK 34 installed
+- Android Studio with Android SDK 36 installed
 - JDK 17
 - An Android device or emulator running Android 5.0 or newer
+
+## Android 17 Readiness
+
+Cobrow is prepared for Android 17 compatibility testing:
+
+- The project targets the latest SDK installed in this workspace, API 36.
+- Android 17 local-network and loopback permissions are declared for API 37 readiness.
+- Local router/NAS/self-hosted addresses request local-network access at runtime on Android 17+.
+- The app is resizable and does not lock orientation, matching Android 17 large-screen behavior.
+- No native dynamic code loading is used by the app.
 
 ## Build
 
