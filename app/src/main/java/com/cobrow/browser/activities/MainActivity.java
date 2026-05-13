@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText urlBar;
     private ProgressBar progressBar;
     private SwipeRefreshLayout swipeRefresh;
-    private ImageButton btnBack, btnForward, btnRefresh, btnHome, btnMenu;
+    private ImageButton btnBack, btnForward, btnRefresh, btnHome, btnTabs, btnMenu;
     private TextView blockedCount;
 
     // Find in page
@@ -103,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
         btnForward = findViewById(R.id.btnForward);
         btnRefresh = findViewById(R.id.btnRefresh);
         btnHome = findViewById(R.id.btnHome);
+        btnTabs = findViewById(R.id.btnTabs);
         btnMenu = findViewById(R.id.btnMenu);
         blockedCount = findViewById(R.id.blockedCount);
         findBar = findViewById(R.id.findBar);
@@ -178,6 +179,7 @@ public class MainActivity extends AppCompatActivity {
             else webView.reload();
         });
         btnHome.setOnClickListener(v -> loadUrl(prefs.getString(PREF_HOME, HOME_URL)));
+        btnTabs.setOnClickListener(v -> startActivityForResult(new Intent(this, TabsActivity.class), 1001));
         btnMenu.setOnClickListener(v -> showMenu());
     }
 
@@ -380,6 +382,15 @@ public class MainActivity extends AppCompatActivity {
     private void saveToHistory(String title, String url) {
         if (!isIncognito)
             executor.execute(() -> CobrowDatabase.get(this).historyDao().insert(new HistoryItem(title, url)));
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1001 && resultCode == RESULT_OK && data != null) {
+            String url = data.getDataString();
+            if (url != null) loadUrl(url);
+        }
     }
 
     @Override

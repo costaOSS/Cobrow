@@ -186,6 +186,16 @@
             android:tint="@color/icon_color" />
 
         <ImageButton
+            android:id="@+id/btnTabs"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Tabs"
+            android:src="@drawable/ic_bookmarks"
+            android:tint="@color/icon_color" />
+
+        <ImageButton
             android:id="@+id/btnMenu"
             android:layout_width="0dp"
             android:layout_height="match_parent"

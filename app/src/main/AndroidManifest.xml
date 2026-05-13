@@ -47,6 +47,8 @@
             android:parentActivityName=".activities.MainActivity" />
         <activity android:name=".activities.BookmarksActivity"
             android:parentActivityName=".activities.MainActivity" />
+        <activity android:name=".activities.TabsActivity"
+            android:parentActivityName=".activities.MainActivity" />
         <activity android:name=".activities.HistoryActivity"
             android:parentActivityName=".activities.MainActivity" />
 
