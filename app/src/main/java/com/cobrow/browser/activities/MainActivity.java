@@ -314,14 +314,29 @@ public class MainActivity extends AppCompatActivity {
 
     public void toggleIncognito() {
         isIncognito = !isIncognito;
-        CookieManager.getInstance().setAcceptCookie(!isIncognito);
-        webView.getSettings().setCacheMode(isIncognito ? WebSettings.LOAD_NO_CACHE : WebSettings.LOAD_DEFAULT);
-        if (isIncognito) {
+        applyIncognitoState(isIncognito);
+        
+        // Update current tab
+        executor.execute(() -> {
+            try {
+                Tab cur = tabsManager.getTabs().get(currentTabIndex);
+                cur.incognito = isIncognito;
+                tabsManager.updateTab(currentTabIndex, cur);
+            } catch (Exception ignored) {}
+        });
+
+        Toast.makeText(this, isIncognito ? "Incognito ON" : "Incognito OFF", Toast.LENGTH_SHORT).show();
+        webView.reload();
+    }
+
+    private void applyIncognitoState(boolean incognito) {
+        this.isIncognito = incognito;
+        CookieManager.getInstance().setAcceptCookie(!incognito);
+        webView.getSettings().setCacheMode(incognito ? WebSettings.LOAD_NO_CACHE : WebSettings.LOAD_DEFAULT);
+        if (incognito) {
             webView.clearCache(true);
             CookieManager.getInstance().removeAllCookies(null);
         }
-        Toast.makeText(this, isIncognito ? "Incognito ON" : "Incognito OFF", Toast.LENGTH_SHORT).show();
-        webView.reload();
     }
 
     public boolean isIncognito() { return isIncognito; }
@@ -482,7 +497,10 @@ public class MainActivity extends AppCompatActivity {
         currentTabIndex = idx;
         tabsManager.setCurrentIndex(idx);
         Tab t = tabs.get(idx);
-        if (t != null && t.url != null) loadUrl(t.url);
+        if (t != null) {
+            applyIncognitoState(t.incognito);
+            if (t.url != null) loadUrl(t.url);
+        }
     }
 
     private void switchToNextTab() {

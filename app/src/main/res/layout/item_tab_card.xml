@@ -39,6 +39,19 @@
             android:tint="@color/icon_color"
             android:contentDescription="Clone tab" />
 
+        <ImageView
+            android:id="@+id/ivIncognito"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_margin="8dp"
+            android:layout_marginBottom="54dp"
+            android:src="@drawable/ic_incognito"
+            android:tint="@color/icon_color"
+            android:visibility="gone"
+            android:contentDescription="Incognito" />
+
         <LinearLayout
             android:layout_below="@id/ivThumb"
             android:layout_width="match_parent"

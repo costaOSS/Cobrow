@@ -58,6 +58,8 @@ public class TabsGridAdapter extends RecyclerView.Adapter<TabsGridAdapter.VH> {
             holder.ivThumb.setImageResource(R.drawable.ic_launcher_foreground);
         }
 
+        holder.ivIncognito.setVisibility(t.incognito ? View.VISIBLE : View.GONE);
+
         holder.itemView.setOnClickListener(v -> { if (listener != null) listener.onTabClicked(holder.getAdapterPosition()); });
         holder.btnClose.setOnClickListener(v -> { if (listener != null) listener.onTabClosed(holder.getAdapterPosition()); });
         holder.btnClone.setOnClickListener(v -> { if (listener != null) listener.onTabCloned(holder.getAdapterPosition()); });
@@ -78,12 +80,13 @@ public class TabsGridAdapter extends RecyclerView.Adapter<TabsGridAdapter.VH> {
     public void addItem(Tab t, int at) { if (at < 0) items.add(t); else items.add(at, t); notifyDataSetChanged(); }
 
     static class VH extends RecyclerView.ViewHolder {
-        ImageView ivThumb;
+        ImageView ivThumb, ivIncognito;
         TextView tvTitle, tvUrl;
         ImageButton btnClose, btnClone;
         VH(@NonNull View v) {
             super(v);
             ivThumb = v.findViewById(R.id.ivThumb);
+            ivIncognito = v.findViewById(R.id.ivIncognito);
             tvTitle = v.findViewById(R.id.tvTitle);
             tvUrl = v.findViewById(R.id.tvUrl);
             btnClose = v.findViewById(R.id.btnCloseTab);
