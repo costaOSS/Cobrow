@@ -45,6 +45,7 @@ import com.cobrow.browser.adapters.UrlSuggestionsAdapter;
 import com.cobrow.browser.data.CobrowDatabase;
 import com.cobrow.browser.data.HistoryItem;
 import com.cobrow.browser.engine.AdBlocker;
+import com.cobrow.browser.engine.CredentialManager;
 import com.cobrow.browser.utils.UrlUtils;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -80,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences prefs;
     private int adsBlocked = 0;
     private boolean isIncognito = false;
+    private CredentialManager credentialManager;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     // Track current page host safely (updated on main thread)
@@ -205,6 +207,9 @@ public class MainActivity extends AppCompatActivity {
 
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, false);
+
+        credentialManager = new CredentialManager(this);
+        webView.addJavascriptInterface(credentialManager, "CobrowPasswordManager");
 
         webView.setWebViewClient(new CobrowWebViewClient());
         webView.setWebChromeClient(new CobrowChromeClient());
@@ -648,6 +653,10 @@ public class MainActivity extends AppCompatActivity {
             updateNavButtons();
             saveToHistory(view.getTitle(), url);
             applyNightModeToWebView(prefs.getBoolean(PREF_NIGHT, false));
+            if (!isIncognito) {
+                credentialManager.autofill(view, currentPageHost);
+                credentialManager.injectFormDetection(view);
+            }
             if (prefs.getBoolean(PREF_ADBLOCK, true))
                 AdBlocker.getInstance().injectElementHiding(view, url);
 
