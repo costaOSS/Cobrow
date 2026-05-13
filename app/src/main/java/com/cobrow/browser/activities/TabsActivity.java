@@ -6,6 +6,9 @@ import android.view.View;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
@@ -33,6 +36,7 @@ public class TabsActivity extends AppCompatActivity implements TabsGridAdapter.L
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tabs_grid);
         ThemeUtils.applySystemBars(this);
+        applySystemBarInsets();
 
         tabsManager = new TabsManager(this);
         rvTabs = findViewById(R.id.rvTabs);
@@ -79,6 +83,15 @@ public class TabsActivity extends AppCompatActivity implements TabsGridAdapter.L
         fabAdd.setOnClickListener(v -> {
             tabsManager.addTab(new Tab("", HOME_URL, null, false));
             refresh();
+        });
+    }
+
+    private void applySystemBarInsets() {
+        View root = findViewById(R.id.tabsRoot);
+        ViewCompat.setOnApplyWindowInsetsListener(root, (view, insets) -> {
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            view.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+            return insets;
         });
     }
 

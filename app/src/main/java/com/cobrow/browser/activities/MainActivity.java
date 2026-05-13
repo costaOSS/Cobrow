@@ -49,6 +49,9 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.webkit.WebSettingsCompat;
 import androidx.webkit.WebViewFeature;
@@ -159,6 +162,7 @@ public class MainActivity extends AppCompatActivity {
 
         prefs = getSharedPreferences("cobrow_prefs", MODE_PRIVATE);
         ThemeUtils.applySystemBars(this);
+        applySystemBarInsets();
 
         webView = findViewById(R.id.webView);
         urlBar = findViewById(R.id.urlBar);
@@ -241,6 +245,15 @@ public class MainActivity extends AppCompatActivity {
                 loadUrl(cur != null && cur.url != null && !cur.url.isEmpty() ? cur.url : prefs.getString(PREF_HOME, HOME_URL));
             }
         }
+    }
+
+    private void applySystemBarInsets() {
+        View root = findViewById(R.id.mainRoot);
+        ViewCompat.setOnApplyWindowInsetsListener(root, (view, insets) -> {
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            view.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+            return insets;
+        });
     }
 
     @SuppressLint("SetJavaScriptEnabled")
