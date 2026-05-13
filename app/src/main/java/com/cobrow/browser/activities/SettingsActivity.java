@@ -44,7 +44,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         switchAdblock.setChecked(prefs.getBoolean("adblock", true));
         switchJs.setChecked(prefs.getBoolean("javascript", true));
-        switchDarkMode.setChecked(prefs.getBoolean("dark_mode", false));
+        switchDarkMode.setChecked(prefs.getBoolean("night_mode", false));
         etHomeUrl.setText(prefs.getString("home_url", "https://www.google.com"));
         etUserAgent.setText(prefs.getString("user_agent", ""));
 
@@ -67,8 +67,12 @@ public class SettingsActivity extends AppCompatActivity {
         });
         switchJs.setOnCheckedChangeListener((btn, checked) ->
                 prefs.edit().putBoolean("javascript", checked).apply());
-        switchDarkMode.setOnCheckedChangeListener((btn, checked) ->
-                prefs.edit().putBoolean("dark_mode", checked).apply());
+        switchDarkMode.setOnCheckedChangeListener((btn, checked) -> {
+            prefs.edit().putBoolean("night_mode", checked).apply();
+            androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
+                    checked ? androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES :
+                            androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO);
+        });
 
         findViewById(R.id.btnSaveSettings).setOnClickListener(v -> {
             prefs.edit()

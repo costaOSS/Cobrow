@@ -35,7 +35,10 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.webkit.WebSettingsCompat;
+import androidx.webkit.WebViewFeature;
 
 import com.cobrow.browser.R;
 import com.cobrow.browser.adapters.UrlSuggestionsAdapter;
@@ -110,6 +113,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         prefs = getSharedPreferences("cobrow_prefs", MODE_PRIVATE);
+
+        // Apply night mode
+        if (prefs.getBoolean(PREF_NIGHT, false)) {
+            androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES);
+        }
 
         webView = findViewById(R.id.webView);
         urlBar = findViewById(R.id.urlBar);
@@ -349,8 +357,19 @@ public class MainActivity extends AppCompatActivity {
     public void toggleNightMode() {
         boolean night = !prefs.getBoolean(PREF_NIGHT, false);
         prefs.edit().putBoolean(PREF_NIGHT, night).apply();
-        webView.loadUrl(night ? NIGHT_MODE_JS : NIGHT_MODE_REMOVE_JS);
+        AppCompatDelegate.setDefaultNightMode(night ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO);
+        applyNightModeToWebView(night);
         Toast.makeText(this, night ? "Night Mode ON" : "Night Mode OFF", Toast.LENGTH_SHORT).show();
+    }
+
+    private void applyNightModeToWebView(boolean night) {
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
+            WebSettingsCompat.setForceDark(webView.getSettings(),
+                    night ? WebSettingsCompat.FORCE_DARK_ON : WebSettingsCompat.FORCE_DARK_OFF);
+        } else {
+            // Fallback to JS injection if FORCE_DARK is not supported
+            webView.loadUrl(night ? NIGHT_MODE_JS : NIGHT_MODE_REMOVE_JS);
+        }
     }
 
     public boolean isNightMode() { return prefs.getBoolean(PREF_NIGHT, false); }
@@ -593,7 +612,7 @@ public class MainActivity extends AppCompatActivity {
             btnRefresh.setImageResource(android.R.drawable.ic_menu_rotate);
             updateNavButtons();
             saveToHistory(view.getTitle(), url);
-            if (prefs.getBoolean(PREF_NIGHT, false)) view.loadUrl(NIGHT_MODE_JS);
+            applyNightModeToWebView(prefs.getBoolean(PREF_NIGHT, false));
             if (prefs.getBoolean(PREF_ADBLOCK, true))
                 AdBlocker.getInstance().injectElementHiding(view, url);
 
