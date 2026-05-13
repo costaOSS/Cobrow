@@ -9,11 +9,13 @@ public class Bookmark {
     public int id;
     public String title;
     public String url;
+    public String folder; // null or empty means root
     public long createdAt;
 
     public Bookmark(String title, String url) {
         this.title = title;
         this.url = url;
+        this.folder = null;
         this.createdAt = System.currentTimeMillis();
     }
 }

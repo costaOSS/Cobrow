@@ -423,12 +423,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void addCurrentPageBookmark() {
-        executor.execute(() -> {
-            com.cobrow.browser.data.Bookmark bm = new com.cobrow.browser.data.Bookmark(
-                    webView.getTitle(), webView.getUrl());
-            CobrowDatabase.get(this).bookmarkDao().insert(bm);
-            runOnUiThread(() -> Toast.makeText(this, "Bookmarked!", Toast.LENGTH_SHORT).show());
-        });
+        final EditText etFolder = new EditText(this);
+        etFolder.setHint("Folder (optional)");
+        etFolder.setPadding(48, 16, 48, 16);
+
+        new AlertDialog.Builder(this)
+                .setTitle("Add Bookmark")
+                .setMessage("Enter folder name (leave empty for root):")
+                .setView(etFolder)
+                .setPositiveButton("Save", (dialog, which) -> {
+                    String folder = etFolder.getText().toString().trim();
+                    executor.execute(() -> {
+                        com.cobrow.browser.data.Bookmark bm = new com.cobrow.browser.data.Bookmark(
+                                webView.getTitle(), webView.getUrl());
+                        if (!folder.isEmpty()) bm.folder = folder;
+                        CobrowDatabase.get(this).bookmarkDao().insert(bm);
+                        runOnUiThread(() -> Toast.makeText(this, "Bookmarked in " + (folder.isEmpty() ? "root" : folder), Toast.LENGTH_SHORT).show());
+                    });
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     private void saveToHistory(String title, String url) {
