@@ -183,12 +183,20 @@ public class MainActivity extends AppCompatActivity {
         webView.setOnTouchListener((v, event) -> { gestureDetector.onTouchEvent(event); return false; });
 
         // Load URL: intent has priority, otherwise restore current tab
-        String intentUrl = getIntent().getDataString();
-        if (intentUrl != null) {
-            loadUrl(intentUrl);
+        String action = getIntent().getAction();
+        if ("com.cobrow.browser.ACTION_NEW_TAB".equals(action)) {
+            addNewTab(HOME_URL);
+        } else if ("com.cobrow.browser.ACTION_NEW_INCOGNITO_TAB".equals(action)) {
+            tabsManager.addTab(new Tab("", HOME_URL, null, true));
+            switchToTab(tabsManager.getTabs().size() - 1);
         } else {
-            Tab cur = tabsManager.getTabs().get(currentTabIndex);
-            loadUrl(cur != null && cur.url != null && !cur.url.isEmpty() ? cur.url : prefs.getString(PREF_HOME, HOME_URL));
+            String intentUrl = getIntent().getDataString();
+            if (intentUrl != null) {
+                loadUrl(intentUrl);
+            } else {
+                Tab cur = tabsManager.getTabs().get(currentTabIndex);
+                loadUrl(cur != null && cur.url != null && !cur.url.isEmpty() ? cur.url : prefs.getString(PREF_HOME, HOME_URL));
+            }
         }
     }
 

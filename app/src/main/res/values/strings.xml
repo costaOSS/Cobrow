@@ -17,4 +17,10 @@ Cobrow is designed with your privacy in mind. We do not collect, store, or share
 • <b>No analytics</b> — we do not use any analytics or tracking SDKs.\n\n
 By tapping <b>Agree</b>, you confirm that you have read and accept these terms.
     </string>
+    <string name="shortcut_new_tab">New Tab</string>
+    <string name="shortcut_new_tab_long">Open a new tab</string>
+    <string name="shortcut_new_incognito">New Incognito</string>
+    <string name="shortcut_new_incognito_long">Open a new incognito tab</string>
+    <string name="shortcut_bookmarks">Bookmarks</string>
+    <string name="shortcut_bookmarks_long">View saved bookmarks</string>
 </resources>

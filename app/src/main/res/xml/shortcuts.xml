@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="new_tab"
+        android:enabled="true"
+        android:icon="@drawable/ic_bookmarks"
+        android:shortcutShortLabel="@string/shortcut_new_tab"
+        android:shortcutLongLabel="@string/shortcut_new_tab_long">
+        <intent
+            android:action="com.cobrow.browser.ACTION_NEW_TAB"
+            android:targetPackage="com.cobrow.browser"
+            android:targetClass="com.cobrow.browser.activities.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="new_incognito_tab"
+        android:enabled="true"
+        android:icon="@drawable/ic_incognito"
+        android:shortcutShortLabel="@string/shortcut_new_incognito"
+        android:shortcutLongLabel="@string/shortcut_new_incognito_long">
+        <intent
+            android:action="com.cobrow.browser.ACTION_NEW_INCOGNITO_TAB"
+            android:targetPackage="com.cobrow.browser"
+            android:targetClass="com.cobrow.browser.activities.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="bookmarks"
+        android:enabled="true"
+        android:icon="@drawable/ic_bookmark"
+        android:shortcutShortLabel="@string/shortcut_bookmarks"
+        android:shortcutLongLabel="@string/shortcut_bookmarks_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.cobrow.browser"
+            android:targetClass="com.cobrow.browser.activities.BookmarksActivity" />
+    </shortcut>
+</shortcuts>

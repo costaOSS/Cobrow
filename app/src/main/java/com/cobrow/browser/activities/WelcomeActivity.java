@@ -41,7 +41,10 @@ public class WelcomeActivity extends AppCompatActivity {
     }
 
     private void launch() {
-        startActivity(new Intent(this, MainActivity.class));
+        Intent i = new Intent(this, MainActivity.class);
+        if (getIntent().getAction() != null) i.setAction(getIntent().getAction());
+        if (getIntent().getData() != null) i.setData(getIntent().getData());
+        startActivity(i);
         finish();
     }
 }
