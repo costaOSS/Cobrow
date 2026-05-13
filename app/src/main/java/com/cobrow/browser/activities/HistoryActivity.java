@@ -6,6 +6,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -23,6 +24,7 @@ public class HistoryActivity extends AppCompatActivity {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private List<HistoryItem> items;
     private UrlListAdapter adapter;
+    private String currentQuery = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,8 +36,26 @@ public class HistoryActivity extends AppCompatActivity {
         RecyclerView rv = findViewById(R.id.recyclerView);
         rv.setLayoutManager(new LinearLayoutManager(this));
 
+        SearchView searchView = findViewById(R.id.searchView);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override public boolean onQueryTextSubmit(String query) { return false; }
+            @Override public boolean onQueryTextChange(String newText) {
+                currentQuery = newText.trim();
+                loadData(rv);
+                return true;
+            }
+        });
+
+        loadData(rv);
+    }
+
+    private void loadData(RecyclerView rv) {
         executor.execute(() -> {
-            items = CobrowDatabase.get(this).historyDao().getAll();
+            if (currentQuery.isEmpty()) {
+                items = CobrowDatabase.get(this).historyDao().getAll();
+            } else {
+                items = CobrowDatabase.get(this).historyDao().search(currentQuery);
+            }
             runOnUiThread(() -> {
                 adapter = new UrlListAdapter(
                         items.stream().map(h -> h.title + "\n" + h.url).collect(Collectors.toList()),

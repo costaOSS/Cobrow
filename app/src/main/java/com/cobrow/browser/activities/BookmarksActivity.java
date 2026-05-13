@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -24,6 +25,7 @@ public class BookmarksActivity extends AppCompatActivity {
     private List<Bookmark> currentBookmarks;
     private List<String> currentFolders;
     private String currentFolder = null; // null means root
+    private String currentQuery = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,17 +37,34 @@ public class BookmarksActivity extends AppCompatActivity {
         RecyclerView rv = findViewById(R.id.recyclerView);
         rv.setLayoutManager(new LinearLayoutManager(this));
 
+        SearchView searchView = findViewById(R.id.searchView);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override public boolean onQueryTextSubmit(String query) { return false; }
+            @Override public boolean onQueryTextChange(String newText) {
+                currentQuery = newText.trim();
+                loadData(rv);
+                return true;
+            }
+        });
+
         loadData(rv);
     }
 
     private void updateTitle() {
-        setTitle(currentFolder == null ? "Bookmarks" : "📁 " + currentFolder);
+        if (!currentQuery.isEmpty()) {
+            setTitle("Search: " + currentQuery);
+        } else {
+            setTitle(currentFolder == null ? "Bookmarks" : "📁 " + currentFolder);
+        }
     }
 
     private void loadData(RecyclerView rv) {
         executor.execute(() -> {
             CobrowDatabase db = CobrowDatabase.get(this);
-            if (currentFolder == null) {
+            if (!currentQuery.isEmpty()) {
+                currentFolders = new ArrayList<>();
+                currentBookmarks = db.bookmarkDao().search(currentQuery);
+            } else if (currentFolder == null) {
                 currentFolders = db.bookmarkDao().getFolders();
                 currentBookmarks = db.bookmarkDao().getRoot();
             } else {
@@ -58,11 +77,11 @@ public class BookmarksActivity extends AppCompatActivity {
             for (Bookmark b : currentBookmarks) items.add(b.title + "\n" + b.url);
 
             runOnUiThread(() -> {
+                updateTitle();
                 adapter = new UrlListAdapter(items,
                         pos -> {
                             if (pos < currentFolders.size()) {
                                 currentFolder = currentFolders.get(pos);
-                                updateTitle();
                                 loadData(rv);
                             } else {
                                 int bookmarkPos = pos - currentFolders.size();
