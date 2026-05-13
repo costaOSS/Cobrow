@@ -154,6 +154,7 @@ public class MainActivity extends AppCompatActivity {
         setupSwipeRefresh();
         setupFindInPage();
         setupFullscreenScroll();
+        setupLongClickMenu();
 
         // Initialize tabs
         tabsManager = new TabsManager(this);
@@ -295,6 +296,40 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    private void setupLongClickMenu() {
+        webView.setOnLongClickListener(v -> {
+            WebView.HitTestResult result = webView.getHitTestResult();
+            final String url = result.getExtra();
+            if (url == null) return false;
+
+            int type = result.getType();
+            if (type == WebView.HitTestResult.SRC_ANCHOR_TYPE || type == WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE) {
+                new AlertDialog.Builder(this)
+                        .setTitle(url)
+                        .setItems(new String[]{"Open in new tab", "Copy link", "Download link", "Share"}, (dialog, which) -> {
+                            switch (which) {
+                                case 0: addNewTab(url); break;
+                                case 1:
+                                    android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                                    clipboard.setPrimaryClip(android.content.ClipData.newPlainText("URL", url));
+                                    Toast.makeText(this, "Copied to clipboard", Toast.LENGTH_SHORT).show();
+                                    break;
+                                case 2: webView.loadUrl(url); // This will trigger DownloadListener if it's a file
+                                    break;
+                                case 3:
+                                    Intent share = new Intent(Intent.ACTION_SEND);
+                                    share.setType("text/plain");
+                                    share.putExtra(Intent.EXTRA_TEXT, url);
+                                    startActivity(Intent.createChooser(share, "Share link"));
+                                    break;
+                            }
+                        }).show();
+                return true;
+            }
+            return false;
+        });
     }
 
     private void setToolbarVisible(boolean visible) {
